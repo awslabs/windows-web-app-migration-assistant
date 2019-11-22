@@ -1,0 +1,24 @@
+{
+  "manifestVersion": 1,
+  "deployments": {
+    "custom": [
+      {
+        "name": "{REPLACE_WITH_WEBSITE_NAME}",
+        "scripts": {
+          "install": {
+            "file": "scripts/site_install.ps1"
+          },
+          "postInstall": {
+            "file": "scripts/site_post_install.ps1"
+          },
+          "restart": {
+            "file": "scripts/site_restart.ps1"
+          },
+          "uninstall": {
+            "file": "scripts/site_uninstall.ps1"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+    "Custom setting #1": "Set this flag to True to see exact timestamps for each console message.",
+    "displayTimestampsInConsole": "False",
+
+    "Custom setting #2": "Set this variable to use as the default AWS profile file location. Note: use double backslash (\\) instead of single",
+    "defaultAwsProfileFileLocation": "",
+
+    "Custom setting #3": "Set this variable to use as the default AWS profile name.",
+    "defaultAwsProfileName": "",
+
+    "Custom setting #4": "Set this flag to True to continue the migration even if there is an incompatibility detected",
+    "ignoreMigrationReadinessWarnings": "False",
+
+    "Custom setting #5": "Set this flag to True to delete all S3 buckets created during the migration after the deployment",
+    "deleteTempS3Buckets": "False"
+}
