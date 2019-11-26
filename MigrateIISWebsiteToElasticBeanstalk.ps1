@@ -1372,7 +1372,8 @@ function Global:Get-CheckWindowsAuthenticationInWebConfig {
     $Log = "No authentication problem found."
 
     if ($usingWinAuth) {
-        $Log = "Windows authentication detected - AD extension to AWS is required."
+        $Result = $false
+        $Log = "Windows authentication is not supported at this time."
     }
 
     $AuthBindingsCheck = [ordered]@{
@@ -1404,7 +1405,8 @@ function Global:Get-CheckAuthentication {
     $Result = $true
 
     if ($wc.enabled) {
-        $Log = "Windows authentication detected - AD extension to AWS is required."
+        $Result = $false
+        $Log = "Windows authentication is not supported at this time."
     } else {
         $Log = "No authentication problem found."
     }
@@ -1927,43 +1929,6 @@ function Global:Add-IISHardeningSettings {
 
     Add-EBExtensionFileToFolder $iisHardeningConfig $EBAppFolderPath
     Add-EBExtensionFileToFolder $iisHardeningScript $EBAppFolderPath
-}
-
-function Global:Add-ADJoiningSettings {
-    <#
-        .SYNOPSIS
-            This function adds AD Joining capability to the EB application
-        .INPUTS
-            1. Full physical path of the EB application folder
-            2. Name of the AD-Joining SSM Document in customer's account
-        .OUTPUTS
-            None - will throw exception when execution fails
-    #>
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [String]
-        $EBAppFolderPath,
-
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [String]
-        $SSMDocumentName
-    )
-
-    Verify-PathExists $EBAppFolderPath
-
-    $adJoiningConfig = Join-Path $runDirectory "utils\templates\ad_joining.config"
-    Add-EBExtensionFileToFolder $adJoiningConfig $EBAppFolderPath
-
-    $adJoiningScript = Join-Path $runDirectory "utils\templates\join_ad.ps1"
-    $templateFileContent = Get-Content $adJoiningScript
-    $updatedFileContent = $templateFileContent -replace "{REPLACE_WITH_SSM_DOC_NAME}", $SSMDocumentName
-    $newScriptName = "join_customer_ad.ps1"    
-    $newFile = New-File $LogFolderPath $newScriptName $True
-    $updatedFileContent | Out-File $newFile
-    Add-EBExtensionFileToFolder $newFile $EBAppFolderPath
 }
 
 function Global:Generate-MSDeploySourceBundle {
@@ -2647,19 +2612,6 @@ if ($userInputY -eq "Y" -or $userInputY -eq "y") {
     New-Message $InfoMsg "Added IIS hardening settings to the deployment bundle." $MigrationRunLogFile
 } else {
     New-Message $InfoMsg "IIS hardening settings are not added." $MigrationRunLogFile
-}
-
-New-Message $InfoMsg "Would you like to join the Elastic Beanstalk application to an Active Directory?" $MigrationRunLogFile
-New-Message $InfoMsg "Please see the [Active Directory] section in the readme file for instructions on extending your AD on AWS." $MigrationRunLogFile
-
-$userInputY = "N"
-$userInputY = Get-UserInputString $MigrationRunLogFile "Press `"Y`" to join the application to Active Directory [N]"
-if ($userInputY -eq "Y" -or $userInputY -eq "y") {
-    $ssmDocName = Get-UserInputString $MigrationRunLogFile "Name of the AD-Joining SSM document"
-    Add-ADJoiningSettings $appBundleFolderPath $ssmDocName
-    New-Message $InfoMsg "Application is configured to join AD. Please use the advanced deployment mode." $MigrationRunLogFile
-} else {
-    New-Message $InfoMsg "Skipped AD configurations." $MigrationRunLogFile
 }
 
 $outputFolderPath = New-Folder $CurrentMigrationRunPath $outputFolderName $True

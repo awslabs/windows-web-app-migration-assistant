@@ -6,9 +6,9 @@ The AWS Web Application Migration Assistant is an interactive PowerShell utility
 .NET applications from local IIS Windows servers to AWS Elastic Beanstalk. The assistant supports
 migrating an entire website with its configurations to Elastic Beanstalk with minimal or no changes
 needed. It also comes with an optional database migration utility (MigrateSQLServerToEC2Windows.ps1) that
-migrates SQL databases associated with the website to new SQL Windows instances in AWS EC2.
+migrates SQL databases associated with the website to new SQL servers in AWS EC2.
 
-Download link for the database migration tool:
+Link to the database migration tool:
 https://aws.amazon.com/blogs/database/migrating-your-on-premises-sql-server-windows-workloads-to-amazon-ec2-linux/
 
 
@@ -69,6 +69,8 @@ migrate the website to. More information on EIP limits can be found here:
 5. The assistant needs to run on the server where the website is hosted on. Thus, the server needs
    to have full internet access to AWS. The assistant also requires the Administrator role.
 
+6. Applications with Active Directory is currently not supported.
+
 
 ### Migration Workflow
 
@@ -118,8 +120,8 @@ Here's an overview of the migration assistant's general workflow:
 
 ### Database Migration
 
-The migration assistant comes with a database migration utility (MigrateSQLServerToEC2Windows.ps1) that
-migrates SQL Server databases to new SQL Windows instances in AWS EC2. The utility can be downloaded from:
+The migration assistant comes with a database migration utility (MigrateSQLServerToEC2Linux.ps1) that
+migrates SQL Server databases to new SQL servers in AWS EC2. The utility & document can be found at:
 
 https://aws.amazon.com/blogs/database/migrating-your-on-premises-sql-server-windows-workloads-to-amazon-ec2-linux/
 
@@ -137,42 +139,6 @@ or do one of the following:
    case, you don't need to modify the old connection strings.
 
 3. For databases of a very large scale, consider using the AWS Database Migration Service.
-
-If you wish to migrate the database to a Linux server, see
-https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/replatform-sql-server.html
-
-
-### Active Directory
-
-If your IIS application uses Active Directory (AD) for authentication, you can extend your AD to AWS
-then join the Elastic Beanstalk application to the AD at deployment time by following these steps:
-
-1. Extend the AD to AWS using the AD Connector:
-    https://docs.aws.amazon.com/directoryservice/latest/admin-guide/directory_ad_connector.html
-2. Create the following SSM document in your account (replace the indicated fields):
-    https://docs.aws.amazon.com/systems-manager/latest/userguide/create-ssm-doc.html
-    Content of the SSM document:
-
-{
-    "schemaVersion": "1.0",
-    "description": "Sample configuration to join an instance to a domain",
-    "runtimeConfig": {
-        "aws:domainJoin": {
-            "properties": {
-                "directoryId": "{REPLACE_WITH_DIRECTORY_ID}",
-                "directoryName": "{REPLACE_WITH_DIRECTORY_NAME}",
-                "dnsIpAddresses": [
-                    "{REPLACE_WITH_DNS_IP_ADDRESS_1}",
-                    "{REPLACE_WITH_DNS_IP_ADDRESS_2}"
-                ]
-            }
-        }
-    }
-}
-
-3. When prompted, provide the name of the SSM document
-4. Select the advanced deployment method
-5. Select the VPC the AD extends in & instance profile with ssm:CreateAssociation permission to deploy the application
 
 
 ### Additional Notes
