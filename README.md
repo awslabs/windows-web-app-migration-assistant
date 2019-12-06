@@ -1,7 +1,7 @@
-## Windows Web App Migration Assistant for AWS Elastic Beanstalk
+## Windows Web Appication Migration Assistant for AWS Elastic Beanstalk
 
 ### Overview
-The Windows Web App Migration Assistant for AWS Elastic Beanstalk is an interactive PowerShell utility that migrates [ASP.NET](https://dotnet.microsoft.com/apps/aspnet) and [ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/?view=aspnetcore-3.1) applications from on-premises IIS Windows servers to AWS Elastic Beanstalk. The migration assistant is able to migrate an entire website and its configuration to Elastic Beanstalk with minimal or no changes to the application. After the assistant migrates the application, Elastic Beanstalk automatically handles the ongoing details of capacity provisioning, load balancing, auto-scaling, application health monitoring, and applying patches and updates to the underlying platform. If you need to also migrate a database associated with your web application, you can separately use [AWS Database Migration Service](https://aws.amazon.com/dms/), [CloudEndure Migration](https://aws.amazon.com/cloudendure-migration/), or the [Windows to Linux Replatforming Assistant for Microsoft SQL Server Databases](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/replatform-sql-server.html).
+The Windows Web Application Migration Assistant for AWS Elastic Beanstalk is an interactive PowerShell utility that migrates [ASP.NET](https://dotnet.microsoft.com/apps/aspnet) and [ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/?view=aspnetcore-3.1) applications from on-premises IIS Windows servers to Elastic Beanstalk. The migration assistant is able to migrate an entire website and its configuration to Elastic Beanstalk with minimal or no changes to the application. After the assistant migrates the application, Elastic Beanstalk automatically handles the ongoing details of capacity provisioning, load balancing, auto-scaling, application health monitoring, and applying patches and updates to the underlying platform. If you need to also migrate a database associated with your web application, you can separately use [AWS Database Migration Service](https://aws.amazon.com/dms/), [CloudEndure Migration](https://aws.amazon.com/cloudendure-migration/), or the [Windows to Linux Replatforming Assistant for Microsoft SQL Server Databases](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/replatform-sql-server.html).
 
 ### Migration Assistant Prerequisites
 The migration assistant runs under the Administrator role on the on-premises IIS Windows server. Below is a list of software dependencies for the assistant:
@@ -41,7 +41,7 @@ Here's an overview of the migration assistant's workflow:
 Open a PowerShell terminal as Administrator and launch the `MigrateIISWebsiteToElasticBeanstalk.ps1` script.
 
 ```
-PS C:\> .\MigrateIISWebssiteToElasticBeanstalk.ps1
+PS C:\> .\MigrateIISWebsiteToElasticBeanstalk.ps1
 ```
 
 The script prompts you for input. Below are descriptions for each prompt.
@@ -63,7 +63,7 @@ Enter the name of the profile you created you ran `Set-AWSCredential` during set
 Enter AWS Region:
 ```
 
-Enter the region where your Elastic Beanstalk environment will run, such as us-west-1.
+Enter the region where your Elastic Beanstalk environment will run, such as __us-west-1__.
 For a list of AWS regions, see [AWS Service Endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html) in the *AWS General Reference*.
 
 The assistant then discovers any websites running on your IIS server, lists them, and displays the prompt:
@@ -101,8 +101,7 @@ Enter the name of your new Elastic Beanstalk application.
 Solution stack name:
 ```
 
-Enter the name of the Windows Server Elastic Beanstalk solution stack, such as
-64bit Windows Server 2016 v1.2.0 running IIS 10.0
+Enter the name of the Windows Server Elastic Beanstalk solution stack, such as __64bit Windows Server 2016 v2.3.0 running IIS 10.0__.  We recommend that you use a [v2 version of the Windows solution stack](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/dotnet-v2migration.html) (i.e. v2.x.x version), as this version offers enhanced health, managed updates and immutable deployments.  
 
 For a list of all supported solution stacks, see [.NET on Windows Server with IIS](https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html#platforms-supported.net) in the *AWS Elastic Beanstalk Platforms* guide.
 
