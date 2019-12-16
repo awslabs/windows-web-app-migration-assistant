@@ -1,4 +1,4 @@
-## Windows Web Appication Migration Assistant for AWS Elastic Beanstalk
+## Windows Web Application Migration Assistant for AWS Elastic Beanstalk
 
 ### Overview
 The Windows Web Application Migration Assistant for AWS Elastic Beanstalk is an interactive PowerShell utility that migrates [ASP.NET](https://dotnet.microsoft.com/apps/aspnet) and [ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/?view=aspnetcore-3.1) applications from on-premises IIS Windows servers to Elastic Beanstalk. The migration assistant is able to migrate an entire website and its configuration to Elastic Beanstalk with minimal or no changes to the application. After the assistant migrates the application, Elastic Beanstalk automatically handles the ongoing details of capacity provisioning, load balancing, auto-scaling, application health monitoring, and applying patches and updates to the underlying platform. If you need to also migrate a database associated with your web application, you can separately use [AWS Database Migration Service](https://aws.amazon.com/dms/), [CloudEndure Migration](https://aws.amazon.com/cloudendure-migration/), or the [Windows to Linux Replatforming Assistant for Microsoft SQL Server Databases](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/replatform-sql-server.html).
@@ -44,66 +44,77 @@ Open a PowerShell terminal as Administrator and launch the `MigrateIISWebsiteToE
 PS C:\> .\MigrateIISWebsiteToElasticBeanstalk.ps1
 ```
 
-The script prompts you for input. Below are descriptions for each prompt.
+The assistant prompts you for the location of your credentials file. Press ENTER to skip if you didn't enter a profile location when you ran `Set-AWSCredential` during setup, otherwise provide the path of your credentials.
 
 ```
 Please provide your AWS profile to use for the migration
-AWS profile file location, like c:\aws\credentials (press Enter for default value):
+AWS profile file location, like c:\aws\credentials (press ENTER for default value):
 ```
 
-Press Enter to skip if you didn't enter a profile location when you ran `Set-AWSCredential` during setup, otherwise provide the path of your credentials.
+Enter the name of the profile you created when you ran `Set-AWSCredential` during setup.
 
 ```
-AWS Profile Name:
+Enter your AWS Profile Name:
 ```
 
-Enter the name of the profile you created you ran `Set-AWSCredential` during setup.
+Enter the AWS Region where you'd like your Elastic Beanstalk environment to run. For example: __us-west-1__.
+For a list of AWS Regions where Elastic Beanstalk is available, see [AWS Elastic Beanstalk Endpoints and Quotas](https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html) in the *AWS General Reference*.
 
 ```
-Enter AWS Region:
+Enter the AWS Region (default us-east-1) :
 ```
 
-Enter the region where your Elastic Beanstalk environment will run, such as __us-west-1__.
-For a list of AWS regions, see [AWS Service Endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html) in the *AWS General Reference*.
-
-The assistant then discovers any websites running on your IIS server, lists them, and displays the prompt:
+The assistant then discovers any websites running on your IIS server and lists them, as in the below example.
 
 ```
-Please select the website to migrate to Elastic Beanstalk
-Name of website:
+The migration assistant discovered website(s) on the local server EC2AMAZ-9VP6LPT
+[0] - Default Web Site
+[1] - nop4.2
 ```
 
-Enter the name of the website you’d like to migrate.
-
-The assistant then takes a snapshot of your environment and asks if you would like to update the database connection strings for your application. To leave them unchanged, press Enter. Otherwise, copy the connection string(s) listed by the script that you would like to change, and paste into the prompt. For example:
+Enter the number of the website you’d like to migrate.
 
 ```
-Connection String No. 1: “DataConnectionString”: “Data Source=MyServer;Initial Catalog=nopcommerce;IntegratedSecurity=False;Persist Security Info=False;User ID=sa; Password=eexar884Nix”
+Enter the number of the website to migrate: (default 0):
 ```
 
-The assistant then asks if you want to auto-update the connection string, or update it manually.
+The assistant takes a snapshot of your environment and lists any connection strings used by your application. To update a connection string, enter its number, or press ENTER to skip.
 
 ```
-Press Enter to auto-update:
+Enter the number of the connection string you would like to update, or press ENTER:
 ```
 
-If you press Enter, you are prompted to enter the new connection string. If you press `M`, you can update the string manually by editing it in the file path provided by the migration assistant.
-
-Next, enter `N` for optional prompts like IIS hardening.
+The assistant then pauses and allows you to migrate your database, in case you want to do it now and interactively provide new connection strings.  Press ENTER to continue.
+```
+Please separately migrate your database, if needed.
+```
+The assistant then prompts you to update any connection strings selected above. If you press `M`, you can update the string manually by editing it in the file path provided by the migration assistant.  Otherwise, paste the contents of the new connection string and press ENTER.
 
 ```
-Please name your new EB application:
+Enter "M" to manually edit the file containing the connection string, or paste the replacement stri
+d press ENTER  (default M) :
 ```
 
-Enter the name of your new Elastic Beanstalk application.  
+
+Next, name your new Elastic Beanstalk application.
 
 ```
-Solution stack name:
+Please enter the name of your new EB application.
+The name has to be unique:
 ```
 
-Enter the name of the Windows Server Elastic Beanstalk solution stack, such as __64bit Windows Server 2016 v2.3.0 running IIS 10.0__.  We recommend that you use a [v2 version of the Windows solution stack](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/dotnet-v2migration.html) (i.e. v2.x.x version), as this version offers enhanced health, managed updates and immutable deployments.  
+Enter instance type that your application will run on. See [Amazon EC2 Instance Types](https://aws.amazon.com/ec2/instance-types/) for a complete list.
 
-For a list of all supported solution stacks, see [.NET on Windows Server with IIS](https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html#platforms-supported.net) in the *AWS Elastic Beanstalk Platforms* guide.
+```
+Enter the instance type (default t3.medium) :
+```
+
+Lastly, enter the name of the Windows Server Elastic Beanstalk solution stack. For example: __64bit Windows Server 2016 v2.3.0 running IIS 10.0__.  We recommend that you use a [version 2 solution stack](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/dotnet-v2migration.html) (i.e. v2.x.x). This major version offers enhanced health, managed updates, and immutable deployments. For a list of all supported solution stacks, see [.NET on Windows Server with IIS](https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html#platforms-supported.net) in the *AWS Elastic Beanstalk Platforms* guide.
+
+```
+Solution stack name (default 64bit Windows Server 2016 v2.3.0 running IIS 10.0):
+```
+
 
 The migration assistant then migrates your application to Elastic Beanstalk.
 
