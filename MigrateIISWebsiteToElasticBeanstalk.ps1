@@ -2280,7 +2280,7 @@ New-Message $InfoMsg "----------------------------------------------------------
 
 # AWS profile collection
 
-New-Message $InfoMsg "Please provide your AWS profile to use for the migration." $MigrationRunLogFile
+New-Message $InfoMsg "Please provide an AWS profile to use for the migration." $MigrationRunLogFile
 
 $Global:glb_AwsProfileLocation = $Null
 $Global:glb_AwsProfileName = $Null
@@ -2288,13 +2288,13 @@ if ($DefaultAwsProfileFileLocation) {
     New-Message $InfoMsg "Default AWS profile file detected at $DefaultAwsProfileFileLocation" $MigrationRunLogFile
     $glb_AwsProfileLocation = $DefaultAwsProfileFileLocation
 } else {
-    $glb_AwsProfileLocation = Get-UserInputString $MigrationRunLogFile "AWS profile file location, like c:\aws\credentials (press Enter for default value)"
+    $glb_AwsProfileLocation = Get-UserInputString $MigrationRunLogFile "Enter file location like c:\aws\credentials or press ENTER"
 }
 if ($DefaultAwsProfileName) {
     New-Message $InfoMsg "Default AWS profile name $DefaultAwsProfileName detected." $MigrationRunLogFile
     $glb_AwsProfileName = $DefaultAwsProfileName
 } else {
-    $glb_AwsProfileName = Get-UserInputString $MigrationRunLogFile "AWS profile name"
+    $glb_AwsProfileName = Get-UserInputString $MigrationRunLogFile "Enter the AWS profile name "
 }
 
 $AwsCredsObj = Get-AWSCredentials -ProfileName $glb_AwsProfileName -ProfileLocation $glb_AwsProfileLocation
@@ -2330,11 +2330,15 @@ try {
 # Collect AWS region
 
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
-    New-Message $InfoMsg "Which AWS region would you like to migrate to?" $MigrationRunLogFile
-    New-Message $InfoMsg "Please use format like us-east-1. A list of available AWS regions can be found here:" $MigrationRunLogFile
+    New-Message $InfoMsg " " $MigrationRunLogFile
+    New-Message $InfoMsg "Enter the AWS region would you like to migrate to, such as us-east-1." $MigrationRunLogFile
+    New-Message $InfoMsg "A list of available AWS regions can be found here:" $MigrationRunLogFile
     New-Message $InfoMsg "    https://docs.aws.amazon.com/general/latest/gr/rande.html" $MigrationRunLogFile
 
-    $regionInput = Get-UserInputString $MigrationRunLogFile "Enter AWS Region"
+    $regionInput = Get-UserInputString $MigrationRunLogFile "Enter the AWS Region (default us-east-1) "
+    if (!$regionInput) {
+       $regionInput = "us-east-1"
+    }
     $Global:glb_AwsRegion = Get-AWSRegion $regionInput
     if ($glb_AwsRegion -is [system.array] -or $glb_AwsRegion.name -eq "unknown") {
         Throw "Error: Invalid AWS Region"
@@ -2356,20 +2360,29 @@ if (-Not $websites) {
     Exit-WithError
 }
 
-New-Message $InfoMsg "Discovered the following websites on the local server $($serverObj.computerName)" $MigrationRunLogFile
+New-Message $InfoMsg "The migration assistant discovered website(s) on the local server $($serverObj.computerName)" $MigrationRunLogFile
+$webSiteNum = 0
+$webSiteNameTable = @{ }
 foreach ($site in $websites) {
-    $siteEntry = "- " + $site.name
+    $siteEntry = "[$webSiteNum] " + "- " + $site.name
+    $webSiteNameTable[$webSiteNum.ToString()] = $site.name
+    $webSiteNum = $webSiteNum + 1
     New-Message $InfoMsg $siteEntry $MigrationRunLogFile
 }
-New-Message $InfoMsg "Please select the website to migrate to Elastic Beanstalk." $MigrationRunLogFile
 
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
-    $Global:glb_websiteToMigrate = Get-UserInputString $MigrationRunLogFile "Name of the website"
+    $websiteNumStr = Get-UserInputString $MigrationRunLogFile "Enter the number of the website to migrate: (default 0)"
+
+    if (!$websiteNumStr) {
+        $Global:glb_websiteToMigrate = $webSiteNameTable["0"]
+    } else {
+        $Global:glb_websiteToMigrate = $webSiteNameTable[$websiteNumStr]
+    }
+    New-Message $InfoMsg "Selected '$Global:glb_websiteToMigrate' to migrate from $($serverObj.computerName)" $MigrationRunLogFile
     Verify-WebsiteExists $glb_websiteToMigrate
 }
 
 New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
-
 
 # Generate migration readiness report
 
@@ -2382,7 +2395,7 @@ try {
     $reportObject = New-ReadinessReport $glb_websiteToMigrate
     $reportObject | ConvertTo-Json | Out-File $readinessReportFilePath
 
-    New-Message $InfoMsg "The migration readiness report is generated at" $MigrationRunLogFile
+    New-Message $InfoMsg "The migration readiness report is at" $MigrationRunLogFile
     New-Message $InfoMsg $readinessReportFilePath $MigrationRunLogFile
     New-Message $InfoMsg "Looking for incompatibilities..." $MigrationRunLogFile
 
@@ -2445,6 +2458,7 @@ try {
 
 # Collect & list possible connection strings
 
+New-Message $InfoMsg " " $MigrationRunLogFile
 New-Message $InfoMsg "Automatically discovering possible connection strings... This might take a few minutes." $MigrationRunLogFile
 New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
 New-Message $InfoMsg " " $MigrationRunLogFile
@@ -2452,11 +2466,19 @@ New-Message $InfoMsg " " $MigrationRunLogFile
 $standardConnStrings = Get-DBConnectionStrings $glb_websiteToMigrate
 $possibleConnStrings = Get-PossibleDBConnStrings $siteFolder
 
+$connStringsTable = @{ }
+$connStringsNum = 0
 if ($standardConnStrings) {
     if ($standardConnStrings -is [system.array]) {
-        foreach ($string in $standardConnStrings) {
-            New-Message $InfoMsg "Discovered from a standard location:" $MigrationRunLogFile
-            New-Message $ConsoleOnlyMsg $string $MigrationRunLogFile
+        foreach ($connStr in $standardConnStrings) {
+            $LogMsg = "Discovered connection string in location : $($connStr.Path) :"
+            New-Message $InfoMsg $LogMsg $MigrationRunLogFile
+            $connStringsTable[$connStringsNum] = $connStr
+            $connStr= $connStr.Line
+            $connStr = $connStr.TrimStart()
+            $connStringsNum = $connStringsNum + 1
+            $LogMsg = "[" + $connStringsNum + "] : " + $string
+            New-Message $ConsoleOnlyMsg $LogMsg $MigrationRunLogFile
             New-Message $InfoMsg " " $MigrationRunLogFile
         }
     } else {
@@ -2467,10 +2489,16 @@ if ($standardConnStrings) {
 
 if ($possibleConnStrings) {
     if ($possibleConnStrings -is [system.array]) {
-        foreach ($string in $possibleConnStrings) {
-            New-Message $InfoMsg "Discovered from a non-standard location:" $MigrationRunLogFile
-            New-Message $ConsoleOnlyMsg $string $MigrationRunLogFile
+        foreach ($connStr in $possibleConnStrings) {
+            $connStringsTable[$connStringsNum] = $connStr
+            $LogMsg = "Discovered connection string in location : $($connStr.Path)"
+            $connStr = $connStr.Line
+            $connStr = $connStr.TrimStart()
+            New-Message $InfoMsg $LogMsg $MigrationRunLogFile
+            $LogMsg = "[" + $connStringsNum + "] : " + $connStr
+            New-Message $ConsoleOnlyMsg $LogMsg $MigrationRunLogFile
             New-Message $InfoMsg " " $MigrationRunLogFile
+            $connStringsNum = $connStringsNum + 1
         }
     } else {
         New-Message $InfoMsg $possibleConnStrings $MigrationRunLogFile
@@ -2486,18 +2514,17 @@ New-Message $InfoMsg "----------------------------------------------------------
 
 # Collect connection strings from user
 
-New-Message $InfoMsg "Please use the above list as a reference to provide the actual connection strings used by the website." $MigrationRunLogFile
-New-Message $InfoMsg "Each input line should contain exactly 1 FULL connection string (without file name, quotation around it, etc.)" $MigrationRunLogFile
-New-Message $InfoMsg "When you are done with the inputs, press Enter on a blank line to move on to the next step." $MigrationRunLogFile
-New-Message $InfoMsg "If you want to migrate the application with the connection strings unchanged, please directly press Enter." $MigrationRunLogFile
-New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
-
 $canAutoUpdateConnectionStrings = $True
 $connectionStringNumber = 1
 $connectionStringMatches = @{}
 while ($True) {
-    $userInputString = Get-SensitiveUserInputString $MigrationRunLogFile "Connection String No. $connectionStringNumber"
-    if ($userInputString -eq "") {
+    $userInputStringNum = Get-SensitiveUserInputString $MigrationRunLogFile "Enter the number of the connection string you would like to update, or press ENTER "
+    if (!$userInputStringNum) {
+        break
+    }
+    $userInputString = $connStringsTable[[int]$userInputStringNum].Line
+
+    if (!$userInputString) {
         break
     } else {
         New-Message $InfoMsg "Looking for this connection string in the site directory..." $MigrationRunLogFile
@@ -2529,37 +2556,33 @@ New-Message $InfoMsg "----------------------------------------------------------
 
 if ($connectionStringMatches.Count -ne 0) {
 
-    New-Message $InfoMsg "Please run the following script on the database server(s) to migrate all of the databases to AWS (or use any database migration method you prefer)." $MigrationRunLogFile
-    New-Message $InfoMsg "    MigrateSQLServerToEC2Linux.ps1, the download link is at https://s3-us-west-1.amazonaws.com/awsec2-server-upgrade-prod/MigrateSQLServerToEC2Linux.ps1" $MigrationRunLogFile
-    New-Message $InfoMsg "Make sure the databases are migrated to this AWS region:" $MigrationRunLogFile
-    New-Message $InfoMsg "    $glb_AwsRegion" $MigrationRunLogFile
-    New-Message $InfoMsg "Once the database migration is done, please return to the migration assistant and press Enter." $MigrationRunLogFile
-    New-Message $InfoMsg "You will be asked to provide the new connection strings (of the databases in AWS) for each one you entered previously." $MigrationRunLogFile
+    New-Message $InfoMsg "Please separately migrate your database, if needed" $MigrationRunLogFile
+    $userInputEnter = Get-UserInputString $MigrationRunLogFile "Press ENTER to continue to the next step"
     New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
-    New-Message $InfoMsg "Action required: migrate databases to AWS" $MigrationRunLogFile
-    $userInputEnter = Get-UserInputString $MigrationRunLogFile "Press Enter when you are done"
-    New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
+    $userInputEnter = New-Message $InfoMsg "Continuing with connection string update ..." $MigrationRunLogFile
 
     # Update the website with user provided connection strings
-
-    New-Message $InfoMsg "Attempting to update the website snapshot with new connection strings..." $MigrationRunLogFile
 
     $manualReplacement = $False
     if (-Not $canAutoUpdateConnectionStrings) {
         New-Message $InfoMsg "Unidentifiable connection strings found." $MigrationRunLogFile
         $manualReplacement = $True
     } else {
-        New-Message $InfoMsg "The migration assistant can automatically update the old connection strings. Type `"M`" to do it manually instead." $MigrationRunLogFile
-        $userInputM = Get-UserInputString $MigrationRunLogFile "Press Enter to auto-update"
+        $userInputM = Get-UserInputString $MigrationRunLogFile  "Enter `"M`" to manually edit the file containing the connection string, or paste the replacement string and press ENTER  (default M) "
+        if (!$userInputM) {
+            $userInputM = "M"
+        }
         if ($userInputM -eq "M" -or $userInputM -eq "m") {
             $manualReplacement = $True
-        }    
+        }
     }
 
     if ($manualReplacement) {
-        New-Message $InfoMsg "Please manually replace all the old connection strings in this directory with the new ones:" $MigrationRunLogFile
-        New-Message $InfoMsg "    $siteFolder" $MigrationRunLogFile
-        $userInputEnter = Get-UserInputString $MigrationRunLogFile "Press Enter when you are done"
+        New-Message $InfoMsg "Please manually update the connection string in the following locations : " $MigrationRunLogFile
+        foreach ($connStrMatch in $connectionStringMatches.GetEnumerator()) {
+                New-Message $InfoMsg $($connStrMatch.Value) $MigrationRunLogFile
+        }
+        $userInputEnter = Get-UserInputString $MigrationRunLogFile "Press ENTER when you are done"
     } else {
         foreach ($key in $connectionStringMatches.Keys) {
             New-Message $InfoMsg "Provide replacement connection string for:" $MigrationRunLogFile
@@ -2586,13 +2609,13 @@ if ($connectionStringMatches.Count -ne 0) {
 } else {
     New-Message $InfoMsg "No database need to be migrated." $MigrationRunLogFile
 }
-New-Message $InfoMsg "Finished updating connection strings." $MigrationRunLogFile
+New-Message $InfoMsg "Finished updating connection string." $MigrationRunLogFile
 New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
 
 
 # Convert to EB application bundle
 
-New-Message $InfoMsg "Converting the website to Elastic Beanstalk deployment bundle... This might take a few minutes." $MigrationRunLogFile
+New-Message $InfoMsg "Converting the website to an Elastic Beanstalk deployment bundle... This might take a few minutes." $MigrationRunLogFile
 $outputFolderName = "output"
 $ebAppBundleFileName = "eb-application-bundle.zip"
 
@@ -2600,24 +2623,39 @@ ConvertTo-EBApplicationFolder $appBundleFolderPath $glb_websiteToMigrate $encryp
 
 $iisHardeningDetails = Join-Path $runDirectory "utils\templates\harden_iis.ps1"
 
-New-Message $InfoMsg "Would you like to perform optional IIS hardening on the Elastic Beanstalk application?" $MigrationRunLogFile
-New-Message $InfoMsg "Please review the detailed settings before applying them as they could impact the website's functionality." $MigrationRunLogFile
-New-Message $InfoMsg "The settings can be viewed/modified at:" $MigrationRunLogFile
-New-Message $InfoMsg "    $iisHardeningDetails" $MigrationRunLogFile
+# TBD: Add IIS hardening later
+#New-Message $InfoMsg "Would you like to perform optional IIS hardening on the Elastic Beanstalk application?" $MigrationRunLogFile
+#New-Message $InfoMsg "Please review the detailed settings before applying them as they could impact the website's functionality." $MigrationRunLogFile
+#New-Message $InfoMsg "The settings can be viewed/modified at:" $MigrationRunLogFile
+#New-Message $InfoMsg "    $iisHardeningDetails" $MigrationRunLogFile
 
-$userInputY = "N"
-$userInputY = Get-UserInputString $MigrationRunLogFile "Press `"Y`" to include IIS hardening settings [N]"
-if ($userInputY -eq "Y" -or $userInputY -eq "y") {
-    Add-IISHardeningSettings $appBundleFolderPath
-    New-Message $InfoMsg "Added IIS hardening settings to the deployment bundle." $MigrationRunLogFile
-} else {
-    New-Message $InfoMsg "IIS hardening settings are not added." $MigrationRunLogFile
-}
+#$userInputY = "No"
+#$userInputY = Get-UserInputString $MigrationRunLogFile "Press 'Yes' to include IIS hardening settings (default: No)"
+#if ($userInputY -eq "Yes" -or $userInputY -eq "yes") {
+#    Add-IISHardeningSettings $appBundleFolderPath
+#    New-Message $InfoMsg "Added IIS hardening settings to the deployment bundle." $MigrationRunLogFile
+#} else {
+#    New-Message $InfoMsg "IIS hardening settings are not added." $MigrationRunLogFile
+#}
+
+# TBD: Add AD support later
+#New-Message $InfoMsg "Would you like to join the Elastic Beanstalk application to an Active Directory?" $MigrationRunLogFile
+#New-Message $InfoMsg "Please see the [Active Directory] section in the readme file for instructions on extending your AD on AWS." $MigrationRunLogFile
+
+#$userInputY = "no"
+#$userInputY = Get-UserInputString $MigrationRunLogFile "Press 'Yes' to join the application to Active Directory [No]"
+#if ($userInputY -eq "Yes" -or $userInputY -eq "yes") {
+#    $ssmDocName = Get-UserInputString $MigrationRunLogFile "Name of the AD-Joining SSM document"
+#    Add-ADJoiningSettings $appBundleFolderPath $ssmDocName
+#    New-Message $InfoMsg "Application is configured to join AD. Please use the advanced deployment mode." $MigrationRunLogFile
+#} else {
+#    New-Message $InfoMsg "Skipped AD configurations." $MigrationRunLogFile
+#}
 
 $outputFolderPath = New-Folder $CurrentMigrationRunPath $outputFolderName $True
 $ebAppBundleFile = Get-ZippedFolder $appBundleFolderPath $outputFolderPath $ebAppBundleFileName
 
-New-Message $InfoMsg "Application bundle generated successfully." $MigrationRunLogFile
+New-Message $InfoMsg "Application bundle generated successfully!" $MigrationRunLogFile
 New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
 
 $appBundleSize = (Get-Item $ebAppBundleFile).length
@@ -2645,24 +2683,35 @@ try {
 }
 
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
-    New-Message $InfoMsg "Please name of your new EB application." $MigrationRunLogFile
+    New-Message $InfoMsg "Please enter the name of your new EB application :" $MigrationRunLogFile
     $Global:glb_ebAppName = Get-UserInputString $MigrationRunLogFile "The name has to be unique"
     New-Message $InfoMsg "Creating new EB application..." $MigrationRunLogFile
     New-EBApplication -ApplicationName $glb_ebAppName
 }
 
-$solutionStack =  "64bit Windows Server 2016 v1.2.0 running IIS 10.0"
+$solutionStack =  "64bit Windows Server 2016 v2.3.0 running IIS 10.0"
+$EBtag = New-Object Amazon.ElasticBeanstalk.Model.Tag
+$EBtag.Key = "createdBy"
+$EBtag.Value = "MigrateIISWebsiteToElasticBeanstalk.ps1"
+
+$instanceType = Get-UserInputString $MigrationRunLogFile "Enter the instance type (default t3.medium) "
+if (!$instanceType) {
+     $instanceType = "t3.medium"
+}
+
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
      New-Message $InfoMsg "Please provide the solution stack. E.g. $solutionStack" $MigrationRunLogFile
      New-Message $InfoMsg "A list of available solution stacks can be found here:" $MigrationRunLogFile
      New-Message $InfoMsg "    https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html#platforms-supported.net" $MigrationRunLogFile
-     $ebStkName = Get-UserInputString $MigrationRunLogFile "Solution stack name [$solutionStack]"
+     $ebStkName = Get-UserInputString $MigrationRunLogFile "Solution stack name (default $solutionStack)"
      if (!$ebStkName) {
         $ebStkName = $solutionStack
      }
      New-Message $InfoMsg "Creating new EB environment using solution stack $ebStkName" $MigrationRunLogFile
      $instanceProfile = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,IamInstanceProfile,aws-elasticbeanstalk-ec2-role
-     New-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $MigrationRunId -SolutionStackName $ebStkName -OptionSetting $instanceProfile
+     $instanceProfile.OptionName = "InstanceType"
+     $instanceProfile.Value = $instanceType
+     New-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $MigrationRunId -SolutionStackName $ebStkName -OptionSetting $instanceProfile -Tag $EBTag
 }
 
 $versionLabel = $MigrationRunId + "-vl"
@@ -2671,7 +2720,7 @@ $ebS3Bucket = New-TempS3Bucket $glb_AwsRegion
 $ebS3Key = Split-Path $ebAppBundleFile -Leaf
 Upload-FileToS3Bucket $ebAppBundleFile $ebS3Bucket $glb_AwsRegion
 New-Message $InfoMsg "Creating new EB application version using Application $glb_ebAppName, version label $versionLabel, S3 bucket $ebS3Bucket" $MigrationRunLogFile
-New-EBApplicationVersion -ApplicationName $glb_ebAppName -VersionLabel $versionLabel -SourceBundle_S3Bucket $ebS3Bucket -SourceBundle_S3Key $ebS3Key
+New-EBApplicationVersion -ApplicationName $glb_ebAppName -VersionLabel $versionLabel -SourceBundle_S3Bucket $ebS3Bucket -SourceBundle_S3Key $ebS3Key -Tag $EBtag
 
 New-Message $InfoMsg "Updating the EB environment... This might take a few minutes." $MigrationRunLogFile
 $environmentReady = $False
@@ -2729,12 +2778,9 @@ if ($deploymentSucceeded) {
     New-Message $InfoMsg "Application URL:" $MigrationRunLogFile
     New-Message $InfoMsg "    $applicationURL" $MigrationRunLogFile
     New-Message $InfoMsg " " $MigrationRunLogFile
-    New-Message $InfoMsg "Thank you for using AWS Web Application Migration Assistant." $MigrationRunLogFile
-    New-Message $InfoMsg "Please contact the migration support team for any feedback or question." $MigrationRunLogFile
+    New-Message $InfoMsg "Thank you for using the AWS Web Application Migration Assistant." $MigrationRunLogFile
 } else {
     New-Message $ErrorMsg "It seems that there was an issue when deploying to Elastic Beanstalk." $MigrationRunLogFile
-    New-Message $InfoMsg "Please contact the migration support team to help troubleshooting the deployment." $MigrationRunLogFile
 }
 
 Exit-WithoutError
-
