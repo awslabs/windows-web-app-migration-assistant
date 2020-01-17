@@ -24,7 +24,7 @@ The migration assistant runs under the Administrator role on the on-premises IIS
     The parameter `{profile_name}` refers to the IAM user, and the optional parameter `{path_to_the_new_profile_file}` refers to the full physical path of the new profile file.
 For CLI reference, see [AWS Tools for PowerShell](https://aws.amazon.com/powershell/).
 1. On GitHub, use the **Clone or download** menu to either clone this repository or download a ZIP bundle of it and extract the ZIP file. Place the migration assistant on the local server, in a new folder on a disk that has more than 1 GB free space.
-1. [Optional] Edit the `settings.txt` JSON file, and set the following 2 variables: (1) `defaultAwsProfileFileLocation : {profile_name}` (2) `defaultAwsProfileName : {path_to_the_new_profile_file}`
+1. [Optional] Edit the `settings.txt` JSON file, and set the following 2 variables: (1) `defaultAwsProfileFileLocation : {path_to_the_new_profile_file}` (2) `defaultAwsProfileName : {profile_name}`
 1. If you have a database associated with your application, you can migrate it before migrating the web application using [AWS Database Migration Service](https://aws.amazon.com/dms/), [CloudEndure Migration](https://aws.amazon.com/cloudendure-migration/), or the [Windows to Linux Replatforming Assistant for Microsoft SQL Server Databases](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/replatform-sql-server.html).  
 
 ### Application Migration Workflow
