@@ -2705,10 +2705,9 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
         $ebStkName = $solutionStack
     }
     New-Message $InfoMsg "Creating a new Elastic Beanstalk environment using solution stack '$ebStkName'…" $MigrationRunLogFile
-    $instanceProfile = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,IamInstanceProfile,aws-elasticbeanstalk-ec2-role
-    $instanceProfile.OptionName = "InstanceType"
-    $instanceProfile.Value = $instanceType
-    New-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $MigrationRunId -SolutionStackName $ebStkName -OptionSetting $instanceProfile -Tag $EBTag
+    $instanceProfileOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,IamInstanceProfile,aws-elasticbeanstalk-ec2-role
+    $instanceTypeOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,InstanceType,$instanceType
+    New-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $MigrationRunId -SolutionStackName $ebStkName -OptionSetting $instanceProfileOptionSetting,$instanceTypeOptionSetting -Tag $EBTag
 }
 
 $versionLabel = $MigrationRunId + "-vl"
