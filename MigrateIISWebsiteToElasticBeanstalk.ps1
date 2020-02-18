@@ -2517,11 +2517,11 @@ $canAutoUpdateConnectionStrings = $True
 $connectionStringNumber = 1
 $connectionStringMatches = @{}
 while ($True) {
-    $userInputStringNum = Get-SensitiveUserInputString $MigrationRunLogFile "Enter the number of the connection string you would like to update, or press ENTER"
-    if (!$userInputStringNum) {
+    $userInputConnectionStringNum = Get-SensitiveUserInputString $MigrationRunLogFile "Enter the number of the connection string you would like to update, or press ENTER"
+    if (!$userInputConnectionStringNum) {
         break
     }
-    $userInputString = $connStringsTable[[int]$userInputStringNum].Line
+    $userInputString = $connStringsTable[[int]$userInputConnectionStringNum].Line
 
     if (!$userInputString) {
         break
@@ -2686,29 +2686,46 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     New-EBApplication -ApplicationName $glb_ebAppName
 }
 
-$solutionStack =  "64bit Windows Server 2016 v2.3.0 running IIS 10.0"
+$platformNameFilter = New-Object Amazon.ElasticBeanstalk.Model.PlatformFilter -Property @{Operator='contains';Type='PlatformName';Values='Windows Server 2'}
+$platformOwnerFilter = New-Object Amazon.ElasticBeanstalk.Model.PlatformFilter -Property @{Operator='=';Type='PlatformOwner';Values='AWSElasticBeanstalk'}
+$platformStatusFilter = New-Object Amazon.ElasticBeanstalk.Model.PlatformFilter -Property @{Operator='=';Type='PlatformStatus';Values='Ready'}
+$ebPlatformVersions = Get-EBPlatformVersion -Filter $platformNameFilter,$platformOwnerFilter,$platformStatusFilter
+
+New-Message $InfoMsg "Elastic Beanstalk supports the following Windows Server platforms with IIS: " $MigrationRunLogFile
+New-Message $InfoMsg "To learn more about Elastic Beanstalk platforms, see:" $MigrationRunLogFile
+New-Message $InfoMsg "    https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html#platforms-supported.net" $MigrationRunLogFile
+$ebPlatformsTable = @{}
+$ebPlatformNumber = 1
+foreach ($ebPlatformVersion in $ebPlatformVersions) {
+    $ebPlatformsTable[$ebPlatformNumber] = $ebPlatformVersion.PlatformArn
+    $LogMsg = "[" + $ebPlatformNumber + "] : " + $ebPlatformVersion.PlatformArn
+    New-Message $ConsoleOnlyMsg $LogMsg $MigrationRunLogFile
+    $ebPlatformNumber = $ebPlatformNumber + 1
+}
+
 $EBtag = New-Object Amazon.ElasticBeanstalk.Model.Tag
 $EBtag.Key = "createdBy"
 $EBtag.Value = "MigrateIISWebsiteToElasticBeanstalk.ps1"
 
-$instanceType = Get-UserInputString $MigrationRunLogFile "Enter the instance type [t3.medium]"
-if (!$instanceType) {
-     $instanceType = "t3.medium"
-}
-
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
-    New-Message $InfoMsg "Provide a solution stack. For example: '$solutionStack'." $MigrationRunLogFile
-    New-Message $InfoMsg "For a list of available solution stacks, see:" $MigrationRunLogFile
-    New-Message $InfoMsg "    https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html#platforms-supported.net" $MigrationRunLogFile
-    $ebStkName = Get-UserInputString $MigrationRunLogFile "Enter the solution stack name [$solutionStack]"
-    if (!$ebStkName) {
-        $ebStkName = $solutionStack
+
+    $userInputPlatformStringNum = Get-SensitiveUserInputString $MigrationRunLogFile "Enter the number of the Elastic Beanstalk platform you would like to launch [1]"
+    if (!$userInputPlatformStringNum) {
+        $platformArn =  $ebPlatformsTable[1]
+    } else {
+        $platformArn = $ebPlatformsTable[[int]$userInputPlatformStringNum]
     }
-    New-Message $InfoMsg "Creating a new Elastic Beanstalk environment using solution stack '$ebStkName'…" $MigrationRunLogFile
+
+    $instanceType = Get-UserInputString $MigrationRunLogFile "Enter the instance type [t3.medium]"
+    if (!$instanceType) {
+        $instanceType = "t3.medium"
+    }
+
+    New-Message $InfoMsg "Creating a new Elastic Beanstalk environment using platform arn '$platformArn'..." $MigrationRunLogFile
     $instanceProfileOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,IamInstanceProfile,aws-elasticbeanstalk-ec2-role
     $instanceTypeOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,InstanceType,$instanceType
     $serviceRoleOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:environment,ServiceRole,aws-elasticbeanstalk-service-role
-    New-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $MigrationRunId -SolutionStackName $ebStkName -OptionSetting $instanceProfileOptionSetting,$instanceTypeOptionSetting,$serviceRoleOptionSetting -Tag $EBTag
+    New-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $MigrationRunId -PlatformArn $platformArn -OptionSetting $instanceProfileOptionSetting,$instanceTypeOptionSetting,$serviceRoleOptionSetting -Tag $EBTag
 }
 
 $versionLabel = $MigrationRunId + "-vl"
