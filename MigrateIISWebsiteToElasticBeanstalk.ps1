@@ -2230,6 +2230,40 @@ function Global:Get-S3ObjectURL {
     "https://s3-$BucketRegion.amazonaws.com/$BucketName/$ObjectName"
 }
 
+function Global:Validate-NumberedListUserInput {
+    <#
+        .SYNOPSIS
+            This function validates that the user has entered a number in a valid range
+        .INPUTS
+            1. User input 
+            2. Lower bound
+            3. Upper bound
+        .OUTPUTS
+            None
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Int]
+        $UserInput,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Int]
+        $LowerBound,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Int]
+        $UpperBound
+    )
+
+    if (($UserInput -lt $LowerBound) -or ($UserInput -gt $UpperBound)) {
+        throw "Please enter a number in the list range."
+    }
+}
+
 $Global:Version = "0.2" # must be exactly 3 characters long otherwise it breaks title display
 $Global:runDirectory = $PSScriptRoot
 $Global:ebAppBundleFileSizeLimit = 512mb
@@ -2347,7 +2381,6 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
 Set-DefaultAWSRegion $glb_AwsRegion
 New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
 
-
 # Determine the website to migrate
 
 $serverObj = Get-IISServerInfoObject
@@ -2360,8 +2393,8 @@ if (-Not $websites) {
 }
 
 New-Message $InfoMsg "The migration assistant found website(s) on the local server '$($serverObj.computerName)'." $MigrationRunLogFile
-$webSiteNum = 0
-$webSiteNameTable = @{ }
+$webSiteNum = 1
+$webSiteNameTable = @{}
 foreach ($site in $websites) {
     $siteEntry = "[$webSiteNum] " + "- " + $site.name
     $webSiteNameTable[$webSiteNum.ToString()] = $site.name
@@ -2370,10 +2403,10 @@ foreach ($site in $websites) {
 }
 
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
-    $websiteNumStr = Get-UserInputString $MigrationRunLogFile "Enter the number of the website to migrate: [0]"
+    $websiteNumStr = Get-UserInputString $MigrationRunLogFile "Enter the number of the website to migrate: [1]"
 
     if (!$websiteNumStr) {
-        $Global:glb_websiteToMigrate = $webSiteNameTable["0"]
+        $Global:glb_websiteToMigrate = $webSiteNameTable["1"]
     } else {
         $Global:glb_websiteToMigrate = $webSiteNameTable[$websiteNumStr]
     }
@@ -2466,7 +2499,7 @@ $standardConnStrings = Get-DBConnectionStrings $glb_websiteToMigrate
 $possibleConnStrings = Get-PossibleDBConnStrings $siteFolder
 
 $connStringsTable = @{ }
-$connStringsNum = 0
+$connStringsNum = 1
 if ($standardConnStrings) {
     if ($standardConnStrings -is [system.array]) {
         foreach ($connStr in $standardConnStrings) {
@@ -2686,35 +2719,48 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     New-EBApplication -ApplicationName $glb_ebAppName
 }
 
-$platformNameFilter = New-Object Amazon.ElasticBeanstalk.Model.PlatformFilter -Property @{Operator='contains';Type='PlatformName';Values='Windows Server 2'}
+New-Message $InfoMsg "Elastic Beanstalk supports the following Windows Server versions: " $MigrationRunLogFile
+$windowsVersions = @("2012", "2012 R2", "Core 2012 R2", "2016", "Core 2016", "2019", "Core 2019")
+$windowsVersionNumber = 1
+foreach ($windowsVersion in $windowsVersions) {
+    $LogMsg = "[" + $windowsVersionNumber + "] : Windows Server " + $windowsVersion
+    New-Message $ConsoleOnlyMsg $LogMsg $MigrationRunLogFile
+    $windowsVersionNumber = $windowsVersionNumber + 1
+}
+
+$platformNameFilter = New-Object Amazon.ElasticBeanstalk.Model.PlatformFilter -Property @{Operator='contains';Type='PlatformName';Values='Windows Server'}
 $platformOwnerFilter = New-Object Amazon.ElasticBeanstalk.Model.PlatformFilter -Property @{Operator='=';Type='PlatformOwner';Values='AWSElasticBeanstalk'}
 $platformStatusFilter = New-Object Amazon.ElasticBeanstalk.Model.PlatformFilter -Property @{Operator='=';Type='PlatformStatus';Values='Ready'}
 $ebPlatformVersions = Get-EBPlatformVersion -Filter $platformNameFilter,$platformOwnerFilter,$platformStatusFilter
-
-New-Message $InfoMsg "Elastic Beanstalk supports the following Windows Server platforms with IIS: " $MigrationRunLogFile
-New-Message $InfoMsg "To learn more about Elastic Beanstalk platforms, see:" $MigrationRunLogFile
-New-Message $InfoMsg "    https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html#platforms-supported.net" $MigrationRunLogFile
-$ebPlatformsTable = @{}
-$ebPlatformNumber = 1
-foreach ($ebPlatformVersion in $ebPlatformVersions) {
-    $ebPlatformsTable[$ebPlatformNumber] = $ebPlatformVersion.PlatformArn
-    $LogMsg = "[" + $ebPlatformNumber + "] : " + $ebPlatformVersion.PlatformArn
-    New-Message $ConsoleOnlyMsg $LogMsg $MigrationRunLogFile
-    $ebPlatformNumber = $ebPlatformNumber + 1
-}
 
 $EBtag = New-Object Amazon.ElasticBeanstalk.Model.Tag
 $EBtag.Key = "createdBy"
 $EBtag.Value = "MigrateIISWebsiteToElasticBeanstalk.ps1"
 
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
+    $userInputWindowsVersion =  $windowsVersions[0]
 
-    $userInputPlatformStringNum = Get-SensitiveUserInputString $MigrationRunLogFile "Enter the number of the Elastic Beanstalk platform you would like to launch [1]"
-    if (!$userInputPlatformStringNum) {
-        $platformArn =  $ebPlatformsTable[1]
-    } else {
-        $platformArn = $ebPlatformsTable[[int]$userInputPlatformStringNum]
+    $userInputWindowsStringNum = Get-UserInputString $MigrationRunLogFile "Enter the number of the Windows version for your Elastic Beanstalk environment [1]"
+    if (!$userInputWindowsStringNum){
+        $userInputWindowsStringNum = 1
     }
+    Validate-NumberedListUserInput $([int]$userInputWindowsStringNum) 1 $windowsVersions.Count
+    $userInputWindowsVersion = $windowsVersions[([int]$userInputWindowsStringNum)-1]
+    New-Message $InfoMsg " " $MigrationRunLogFile
+
+    foreach ($ebPlatformVersion in $ebPlatformVersions) {
+        if ($userInputWindowsVersion -and $($ebPlatformVersion.PlatformArn).contains($userInputWindowsVersion+"/")){
+            $platformArn = $ebPlatformVersion.PlatformArn
+            break
+        }
+    }
+
+    $platformArnPrefix = "platform/"
+    $userFriendlyEbPlatformVersion = $platformArn.substring($platformArn.IndexOf($platformArnPrefix)+$platformArnPrefix.length)
+    New-Message $InfoMsg "The latest Elastic Beanstalk platform for Windows Server $userInputWindowsVersion is: $userFriendlyEbPlatformVersion" $MigrationRunLogFile
+    New-Message $InfoMsg "To learn more about Elastic Beanstalk platforms, see:" $MigrationRunLogFile
+    New-Message $InfoMsg "    https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html#platforms-supported.net" $MigrationRunLogFile
+    New-Message $InfoMsg " " $MigrationRunLogFile
 
     $instanceType = Get-UserInputString $MigrationRunLogFile "Enter the instance type [t3.medium]"
     if (!$instanceType) {
