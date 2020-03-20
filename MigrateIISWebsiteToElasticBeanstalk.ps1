@@ -1740,7 +1740,7 @@ function Global:Get-PossibleDBConnStrings {
     )
 
     $connStrPatterns = "DataSource=.*UserId=.*Password=.*",
-                        "Server=.*Database=.*User Id=.*Password=.*",
+                        "Server=.*Database=.*",
                         "User ID=.*Password=.*Host=.*Port=.*Database=.*Pooling=.*Min Pool Size=.*Max Pool Size=.*Connection Lifetime=.*",
                         "Provider=.*Data Source=.*location=.*User ID=.*password=.*timeout=.*",
                         "Server=.*Database=.*Uid=.*Pwd=.*",
@@ -1748,6 +1748,7 @@ function Global:Get-PossibleDBConnStrings {
                         "Provider=.*User Id=.*Password=.*",
                         "Provider=.*Data Source=.*",
                         "Provider=.*OledbKey1=.*OledbKey2=.*",
+                        "Data Source=.*User ID=.*Password=.*",
                         "Data Source=.*Version=.*",
                         "Data Source=.*Persist Security Info=.*",
                         "Server=.*User ID=.*Password=.*Trusted_Connection=.*Encrypt=.*",
