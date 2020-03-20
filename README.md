@@ -113,7 +113,7 @@ Enter the instance type (default t3.medium) :
 Lastly, select the Elastic Beanstalk platform from the below list. This platform should match the version of Windows Server that is currently running on your host system.
 
 ```
-Elastic Beanstalk supports the following Windows Server versions: 
+Elastic Beanstalk supports the following Windows Server versions:
 [1] : Windows Server 2012
 [2] : Windows Server 2012 R2
 [3] : Windows Server Core 2012 R2
@@ -149,7 +149,6 @@ If you’re migrating an ASP.NET website that is actively maintained and updated
 1. You see this error message: `Exception calling "ExtractToDirectory" with "2" argument(s): "Could not find a part of the path..."`: This means that the path to the file in generated Elastic Beanstalk deployment bundle is too long. In this case, move the migration assistant folder to the root directory of the hard drive and shorten the name of the folder (e.g. from `AWSWebAppMigrationAssistant` to `AMS`).
 1. Your migrated application has trouble accessing its database: If the database is in AWS, please make sure that its security group allows traffic between the migrated Elastic Beanstalk instance (you can find it in EC2 in the same AWS region) and itself. If the database isn’t in AWS, configure the firewall to allow traffic from the Elastic Beanstalk instance.
 1. The migration assistant shows the migration as complete, but the Elastic Beanstalk environment is disabled with the following error messages: `This environment is terminated and cannot be modified. It will remain visible for about an hour. ERROR Failed to launch environment. ERROR Environment must have instance profile associated with it.`: This can happen due to an issue on the Elastic Beanstalk side. To resolve the issue, deploy the generated source bundle to Elastic Beanstalk manually.
-1. The migration assistant shows the migration as complete and the Elastic Beanstalk environment is healthy, but the website doesn't work properly: This issue can happen when the website uses a specific feature which is disabled during the IIS hardening step. In order to resolve this issue, during the migration process, type `N` when promoted `Would you like to perform IIS hardening on the Elastic Beanstalk application?`.
 1. You receive an `InvalidAddress.NotFound` or `AddressLimitExceeded` error: Make sure that the Elastic IP limit isn’t exceeded in the AWS region(s) you intend to migrate the website to. For more information, see [How do I troubleshoot errors with Elastic IP addresses in Amazon VPC?](https://aws.amazon.com/premiumsupport/knowledge-center/unlock-move-recover-troubleshoot-eip/)
 1. If the migration successfully completes, but you later see an error in the Elastic Beanstalk event console such as:
 '''
