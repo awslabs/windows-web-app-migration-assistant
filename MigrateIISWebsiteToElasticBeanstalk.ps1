@@ -539,7 +539,7 @@ function Global:Setup-Workspace {
     # Global & universal variables for all migration runs
 
     $Global:SessionFolderName = "session"
-    $Global:MigrationRunsDirPath = Join-Path $runDirectory "migration_runs"
+    $Global:MigrationRunsDirPath = Join-Path $runDirectory "mrs"
 
     # need to test role first otherwise log file/folder creation may fail
 
@@ -566,7 +566,7 @@ function Global:Setup-NewMigrationRun {
         $MigrationRunID
     )
 
-    # Create the main migration_runs folder if it doesn't exist
+    # Create the main mrs folder if it doesn't exist
     if (-Not (Test-Path $MigrationRunsDirPath)) {
         New-Item -Path $MigrationRunsDirPath -Force -ItemType Directory | Out-Null
     }
@@ -599,7 +599,7 @@ function Global:Setup-NewMigrationRun {
         $Global:EnvironmentInfoLogFile = Join-Path $LogFolderPath "environment_info.log"
 
     } catch {
-        Write-Host "Error: Can't create required items. Be sure you have write permission on the 'migration_runs' folder."
+        Write-Host "Error: Can't create required items. Be sure you have write permission on the 'mrs' folder."
         Exit-WithError
     }
 }
@@ -2268,7 +2268,7 @@ function Global:Validate-NumberedListUserInput {
 $Global:Version = "0.2" # must be exactly 3 characters long otherwise it breaks title display
 $Global:runDirectory = $PSScriptRoot
 $Global:ebAppBundleFileSizeLimit = 512mb
-$Global:MigrationRunId = "MigrationRun-" + $(Get-Date -f yyyyMMddHHmmss)
+$Global:MigrationRunId = "mr-" + $(Get-Date -f yyyyMMddHHmmss)
 
 # load custom migration run settings
 $settings = Get-Content -Raw -Path "$runDirectory\utils\settings.txt" | ConvertFrom-Json
