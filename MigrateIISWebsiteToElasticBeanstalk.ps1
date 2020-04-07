@@ -2453,6 +2453,7 @@ try {
     }
 
 } catch {
+    New-Message $FatalMsg $_ $MigrationRunLogFile
     New-Message $FatalMsg "The migration assistant is unable to generate a migration readiness report. The website might be unsupported for Elastic Beanstalk migration." $MigrationRunLogFile
     $userInputI = Get-UserInputString $MigrationRunLogFile "Enter 'I' to ignore this warning and continue migration"
     if ($userInputI -eq "I" -or $userInputI -eq "i") {
