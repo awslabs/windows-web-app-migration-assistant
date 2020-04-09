@@ -2061,9 +2061,19 @@ function Global:Verify-RequiredInstanceProfileExists {
             None
     #>
     try {
-        Get-IAMRole -RoleName "aws-elasticbeanstalk-ec2-role" | Out-Null
+        Get-IAMInstanceProfile -InstanceProfileName $DefaultElasticBeanstalkInstanceProfileName | Out-Null 
     } catch {
-        throw "ERROR: Unable to find IAM role aws-elasticbeanstalk-ec2-role. Please create the required instance profile according to the README document."
+        New-Message $InfoMsg "Default Elastic Beanstalk instance profile $DefaultElasticBeanstalkInstanceProfileName was not found." $MigrationRunLogFile
+        New-IAMRole -roleName $DefaultElasticBeanstalkInstanceProfileName -AssumeRolePolicyDocument $(Get-Content -raw 'utils\iam_trust_relationship.json.txt')
+        Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkInstanceProfileName -PolicyArn 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier'
+        Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkInstanceProfileName -PolicyArn 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier'
+        Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkInstanceProfileName -PolicyArn 'arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker' 
+        New-Message $InfoMsg "Creating IAM role $DefaultElasticBeanstalkInstanceProfileName." $MigrationRunLogFile
+        New-Message $InfoMsg "Created IAM role $DefaultElasticBeanstalkInstanceProfileName." $MigrationRunLogFile
+        New-Message $InfoMsg "Creating instance profile $DefaultElasticBeanstalkInstanceProfileName." $MigrationRunLogFile
+        New-IAMInstanceProfile -InstanceProfileName $DefaultElasticBeanstalkInstanceProfileName
+        Add-IAMRoleToInstanceProfile -InstanceProfileName $DefaultElasticBeanstalkInstanceProfileName -RoleName $DefaultElasticBeanstalkInstanceProfileName
+        New-Message $InfoMsg "Created Elastic Beanstalk instance profile $DefaultElasticBeanstalkInstanceProfileName." $MigrationRunLogFile
     }
 }
 
@@ -2318,6 +2328,8 @@ New-Message $InfoMsg "Provide an AWS profile that the migrated application shoul
 
 $Global:glb_AwsProfileLocation = $Null
 $Global:glb_AwsProfileName = $Null
+$Global:DefaultElasticBeanstalkInstanceProfileName = "aws-elasticbeanstalk-ec2-role"
+
 if ($DefaultAwsProfileFileLocation) {
     New-Message $InfoMsg "Default AWS profile file detected at '$DefaultAwsProfileFileLocation'." $MigrationRunLogFile
     $glb_AwsProfileLocation = $DefaultAwsProfileFileLocation
