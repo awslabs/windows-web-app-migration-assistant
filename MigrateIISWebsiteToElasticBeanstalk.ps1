@@ -2064,7 +2064,7 @@ function Global:Verify-RequiredInstanceProfileExists {
         Get-IAMInstanceProfile -InstanceProfileName $DefaultElasticBeanstalkInstanceProfileName | Out-Null 
     } catch {
         New-Message $InfoMsg "Default Elastic Beanstalk instance profile $DefaultElasticBeanstalkInstanceProfileName was not found." $MigrationRunLogFile
-        New-IAMRole -roleName $DefaultElasticBeanstalkInstanceProfileName -AssumeRolePolicyDocument $(Get-Content -raw 'utils\iam_trust_relationship.json.txt')
+        New-IAMRole -roleName $DefaultElasticBeanstalkInstanceProfileName -AssumeRolePolicyDocument $(Get-Content -raw 'utils\iam_trust_relationship.json')
         Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkInstanceProfileName -PolicyArn 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier'
         Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkInstanceProfileName -PolicyArn 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier'
         Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkInstanceProfileName -PolicyArn 'arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker' 
