@@ -2553,7 +2553,7 @@ if ($possibleConnStrings) {
 }
 
 if ((-Not $standardConnStrings) -and (-Not $possibleConnStrings)) {
-    New-Message $ErrorMsg "The migration assistant didn't find any connection strings." $MigrationRunLogFile
+    New-Message $InfoMsg "The migration assistant didn't find any connection strings." $MigrationRunLogFile
 }
 New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
 
