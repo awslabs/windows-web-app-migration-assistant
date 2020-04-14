@@ -3,6 +3,8 @@
 ### Overview
 The Windows Web Application Migration Assistant for AWS Elastic Beanstalk is an interactive PowerShell utility that migrates [ASP.NET](https://dotnet.microsoft.com/apps/aspnet) and [ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/?view=aspnetcore-3.1) applications from on-premises IIS Windows servers to Elastic Beanstalk. The migration assistant is able to migrate an entire website and its configuration to Elastic Beanstalk with minimal or no changes to the application. After the assistant migrates the application, Elastic Beanstalk automatically handles the ongoing details of capacity provisioning, load balancing, auto-scaling, application health monitoring, and applying patches and updates to the underlying platform. If you need to also migrate a database associated with your web application, you can separately use [AWS Database Migration Service](https://aws.amazon.com/dms/), [CloudEndure Migration](https://aws.amazon.com/cloudendure-migration/), or the [Windows to Linux Replatforming Assistant for Microsoft SQL Server Databases](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/replatform-sql-server.html).
 
+To try out the migration assistant, run the [Migration Tutorial](https://aws.amazon.com/getting-started/hands-on/migrate-aspnet-web-application-elastic-beanstalk/) to migrate a sample ASP.NET website to Elastic Beanstalk.
+
 ### Migration Assistant Prerequisites
 The migration assistant runs under the Administrator role on the on-premises IIS Windows server. Below is a list of software dependencies for the assistant:
 
@@ -23,7 +25,6 @@ The migration assistant runs under the Administrator role on the on-premises IIS
     ```
     The parameter `{profile_name}` refers to the IAM user, and the optional parameter `{path_to_the_new_profile_file}` refers to the full physical path of the new profile file.
 For CLI reference, see [AWS Tools for PowerShell](https://aws.amazon.com/powershell/).
-1. In the IAM console, confirm that the following IAM role exists: `aws-elasticbeanstalk-ec2-role`. If the role does not exist, create it by following the instructions in [this document](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/iam-instanceprofile.html).
 1. On GitHub, use the **Clone or download** menu to either clone this repository or download a ZIP bundle of it and extract the ZIP file. Place the migration assistant on the local server, in a new folder on a disk that has more than 1 GB free space.
 1. [Optional] Edit the `settings.txt` JSON file, and set the following 2 variables: (1) `defaultAwsProfileFileLocation : {path_to_the_new_profile_file}` (2) `defaultAwsProfileName : {profile_name}`
 1. If you have a database associated with your application, you can migrate it before migrating the web application using [AWS Database Migration Service](https://aws.amazon.com/dms/), [CloudEndure Migration](https://aws.amazon.com/cloudendure-migration/), or the [Windows to Linux Replatforming Assistant for Microsoft SQL Server Databases](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/replatform-sql-server.html).  
