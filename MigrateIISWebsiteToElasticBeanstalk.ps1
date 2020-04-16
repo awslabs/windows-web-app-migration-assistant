@@ -1298,8 +1298,9 @@ function Global:Get-CheckAppRuntimes {
         }
     }
 
-    $CurrentFramework = [System.Runtime.InteropServices.RuntimeInformation]::get_FrameworkDescription()
-    $RunTimeVersions = $RunTimeVersions + " Current framework is $CurrentFramework"
+    $CurrentCLR = [System.Reflection.Assembly]::GetExecutingAssembly().ImageRuntimeVersion
+    $CurrentFramework =  [System.Reflection.Assembly]::Load("mscorlib").GetName().Version.ToString()
+    $RunTimeVersions = $RunTimeVersions + " Current framework version is $CurrentFramework, current CLR version is $CurrentCLR"
 
     $RuntimesCheck = [ordered]@{
         "Result" = $true
