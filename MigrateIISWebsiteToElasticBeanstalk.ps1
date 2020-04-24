@@ -2786,7 +2786,9 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     $instanceProfileOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,IamInstanceProfile,aws-elasticbeanstalk-ec2-role
     $instanceTypeOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,InstanceType,$instanceType
     $serviceRoleOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:environment,ServiceRole,aws-elasticbeanstalk-service-role
-    New-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $MigrationRunId -PlatformArn $platformArn -OptionSetting $instanceProfileOptionSetting,$instanceTypeOptionSetting,$serviceRoleOptionSetting -Tag $EBTag
+    $environmentTypeOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:environment,EnvironmentType,SingleInstance
+
+    New-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $MigrationRunId -PlatformArn $platformArn -OptionSetting $instanceProfileOptionSetting,$instanceTypeOptionSetting,$serviceRoleOptionSetting,$environmentTypeOptionSetting -Tag $EBTag
 }
 
 $versionLabel = $MigrationRunId + "-vl"
