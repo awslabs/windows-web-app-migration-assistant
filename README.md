@@ -156,6 +156,9 @@ If you’re migrating an ASP.NET website that is actively maintained and updated
 Error messages running the command: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy unrestricted -NonInteractive -NoProfile -Command "& { & \"C:\staging\scripts/site_post_install.ps1\"; exit $LastExitCode }" Get-WebFilePath : Cannot find path 'IIS:\Sites\EBSDemo' because it does not exist. At C:\staging\scripts\site_post_install.ps1:14 char:20 + $websiteFilePath = ...message truncated, view the environment logs for full error message details.
 '''
 Confirm that you have migrated your application to an Elastic Beanstalk platform with the same version of Windows Server (e.g. migrate from Windows Server 2016 to Windows Server 2016).
+1. If you see a default ASP.NET website presented when you navigate to your environment’s web page, and your website relies on a database, it may mean the migrated website is unable to connect to your database.
+    1. Confirm that you correctly made any changes to the connection string during migration.
+    1. If your database runs on an EC2 instance, make sure its security group allows inbound traffic (port 1433 for SQL Server) from your new environment’s security group.  
 
 ### License
 This project is licensed under the [Apache-2.0 License](https://www.apache.org/licenses/LICENSE-2.0).
