@@ -2751,6 +2751,7 @@ $ebPlatformVersions = Get-EBPlatformVersion -Filter $platformNameFilter,$platfor
 $EBtag = New-Object Amazon.ElasticBeanstalk.Model.Tag
 $EBtag.Key = "createdBy"
 $EBtag.Value = "MigrateIISWebsiteToElasticBeanstalk.ps1"
+$environmentName = $glb_ebAppName + "-env"
 
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     $userInputWindowsVersion =  $windowsVersions[0]
@@ -2791,7 +2792,7 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
 
     $optionSettings = $instanceProfileOptionSetting,$instanceTypeOptionSetting,$serviceRoleOptionSetting,$environmentTypeOptionSetting,$enhancedHealthReportingOptionSetting
 
-    New-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $MigrationRunId -PlatformArn $platformArn -OptionSetting $optionSettings -Tag $EBTag
+    New-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $environmentName -PlatformArn $platformArn -OptionSetting $optionSettings -Tag $EBTag
 }
 
 $versionLabel = $MigrationRunId + "-vl"
@@ -2807,7 +2808,7 @@ $environmentReady = $False
 $waitTime = (Date).AddMinutes(10)
 while ((Date) -lt $waitTime) {
     try{
-       Update-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $MigrationRunId -VersionLabel $versionLabel
+       Update-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $environmentName -VersionLabel $versionLabel
        $environmentReady = $true
        break
     } catch {
@@ -2815,7 +2816,7 @@ while ((Date) -lt $waitTime) {
        Append-DotsToLatestMessage 1
     }
 }
-$env = Get-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $MigrationRunId -Region $glb_AwsRegion
+$env = Get-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $environmentName -Region $glb_AwsRegion
 $Global:glb_EBEnvID = $env.EnvironmentId
 $s3BucketToCleanUp = $ebS3Bucket
 
