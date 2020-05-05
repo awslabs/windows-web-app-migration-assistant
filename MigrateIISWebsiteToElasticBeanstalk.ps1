@@ -18,7 +18,8 @@
     MS PowerShell version 3.0 or above.
  #------------------------------------------------------------------------------------------------------------------------------#>
 
- $ErrorActionPreference = "Stop"
+#Requires -RunAsAdministrator
+$ErrorActionPreference = "Stop"
 
 function Global:Test-PowerShellSessionRole {
     <#
