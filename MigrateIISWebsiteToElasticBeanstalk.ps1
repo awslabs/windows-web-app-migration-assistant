@@ -2289,6 +2289,28 @@ function Global:Validate-NumberedListUserInput {
     }
 }
 
+function Global:Validate-PowerShellArchitecture {
+    <#
+        .SYNOPSIS
+            This function validates that the PowerShell process architecture matches the IIS and OS architecture
+
+        .OUTPUTS
+            None
+    #>
+
+    if ([System.Environment]::is64BitOperatingSystem -ne [System.Environment]::Is64BitProcess){
+        if ([System.Environment]::is64BitOperatingSystem){
+            Write-Host "Please run the migration assistant using 64-bit PowerShell."
+        }
+        else {
+            Write-Host "Please run the migration assistant using 32-bit PowerShell."
+        }
+        Exit-WithError
+    }
+}
+
+Validate-PowerShellArchitecture
+
 $Global:Version = "0.2" # must be exactly 3 characters long otherwise it breaks title display
 $Global:runDirectory = $PSScriptRoot
 $Global:ebAppBundleFileSizeLimit = 512mb
