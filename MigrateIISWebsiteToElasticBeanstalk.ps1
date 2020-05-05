@@ -2298,10 +2298,10 @@ function Global:Validate-PowerShellArchitecture {
 
     if ([System.Environment]::is64BitOperatingSystem -ne [System.Environment]::Is64BitProcess){
         if ([System.Environment]::is64BitOperatingSystem){
-            Write-Host "Please run the migration assistant using 64-bit PowerShell."
+            Write-Host "Run the migration assistant using 64-bit PowerShell [Windows PowerShell] and not 32-bit PowerShell [Windows PowerShell (x86)]."
         }
         else {
-            Write-Host "Please run the migration assistant using 32-bit PowerShell."
+            Write-Host "Run the migration assistant using 32-bit PowerShell [Windows PowerShell (x86)]."
         }
         Exit-WithError
     }
