@@ -2063,15 +2063,14 @@ function Global:Verify-RequiredRolesExist {
             None
     #>
     try {
-        New-Message $InfoMsg "Checking for default instance profile" $MigrationRunLogFile
         Get-IAMInstanceProfile -InstanceProfileName $DefaultElasticBeanstalkInstanceProfileName | Out-Null 
     } catch {
         New-Message $InfoMsg "Default Elastic Beanstalk instance profile $DefaultElasticBeanstalkInstanceProfileName was not found." $MigrationRunLogFile
+        New-Message $InfoMsg "Creating IAM role $DefaultElasticBeanstalkInstanceProfileName." $MigrationRunLogFile
         New-IAMRole -RoleName $DefaultElasticBeanstalkInstanceProfileName -AssumeRolePolicyDocument $(Get-Content -raw 'utils\iam_trust_relationship_ec2.json')
         Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkInstanceProfileName -PolicyArn 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier'
         Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkInstanceProfileName -PolicyArn 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier'
         Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkInstanceProfileName -PolicyArn 'arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker' 
-        New-Message $InfoMsg "Creating IAM role $DefaultElasticBeanstalkInstanceProfileName." $MigrationRunLogFile
         New-Message $InfoMsg "Created IAM role $DefaultElasticBeanstalkInstanceProfileName." $MigrationRunLogFile
         New-Message $InfoMsg "Creating instance profile $DefaultElasticBeanstalkInstanceProfileName." $MigrationRunLogFile
         New-IAMInstanceProfile -InstanceProfileName $DefaultElasticBeanstalkInstanceProfileName
@@ -2079,14 +2078,13 @@ function Global:Verify-RequiredRolesExist {
         New-Message $InfoMsg "Created Elastic Beanstalk instance profile $DefaultElasticBeanstalkInstanceProfileName." $MigrationRunLogFile
     }
     try {
-        New-Message $InfoMsg "Checking for default service role" $MigrationRunLogFile
         Get-IAMRole -RoleName $DefaultElasticBeanstalkServiceRoleName | Out-Null
     } catch {
         New-Message $InfoMsg "Default Elastic Beanstalk service role $DefaultElasticBeanstalkServiceRoleName was not found." $MigrationRunLogFile
+        New-Message $InfoMsg "Creating IAM role $DefaultElasticBeanstalkServiceRoleName." $MigrationRunLogFile
         New-IAMRole -roleName $DefaultElasticBeanstalkServiceRoleName -AssumeRolePolicyDocument $(Get-Content -raw 'utils\iam_trust_relationship_eb.json')
         Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkServiceRoleName -PolicyArn 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkService'
         Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkServiceRoleName -PolicyArn 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth'
-        New-Message $InfoMsg "Creating IAM role $DefaultElasticBeanstalkServiceRoleName." $MigrationRunLogFile
         New-Message $InfoMsg "Created IAM role $DefaultElasticBeanstalkServiceRoleName." $MigrationRunLogFile
     }
 }
