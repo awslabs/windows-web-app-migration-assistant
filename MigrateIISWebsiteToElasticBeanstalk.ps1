@@ -2053,20 +2053,21 @@ function Global:Verify-UserHasRequiredAWSPolicies {
     throw "ERROR: Please make sure that the AWS managed policy AWSElasticBeanstalkFullAccess is attached to the current user"    
 }
 
-function Global:Verify-RequiredInstanceProfileExists {
+function Global:Verify-RequiredRolesExist {
     <#
         .SYNOPSIS
-            This function checks if the required IAM role exists (aws-elasticbeanstalk-ec2-role)
+            This function checks if the required IAM roles exists (aws-elasticbeanstalk-ec2-role, aws-elasticbeanstalk-service-role)
         .INPUTS
             None
         .OUTPUTS
             None
     #>
     try {
+        New-Message $InfoMsg "Checking for default instance profile" $MigrationRunLogFile
         Get-IAMInstanceProfile -InstanceProfileName $DefaultElasticBeanstalkInstanceProfileName | Out-Null 
     } catch {
         New-Message $InfoMsg "Default Elastic Beanstalk instance profile $DefaultElasticBeanstalkInstanceProfileName was not found." $MigrationRunLogFile
-        New-IAMRole -roleName $DefaultElasticBeanstalkInstanceProfileName -AssumeRolePolicyDocument $(Get-Content -raw 'utils\iam_trust_relationship.json')
+        New-IAMRole -RoleName $DefaultElasticBeanstalkInstanceProfileName -AssumeRolePolicyDocument $(Get-Content -raw 'utils\iam_trust_relationship_ec2.json')
         Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkInstanceProfileName -PolicyArn 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier'
         Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkInstanceProfileName -PolicyArn 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier'
         Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkInstanceProfileName -PolicyArn 'arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker' 
@@ -2076,6 +2077,17 @@ function Global:Verify-RequiredInstanceProfileExists {
         New-IAMInstanceProfile -InstanceProfileName $DefaultElasticBeanstalkInstanceProfileName
         Add-IAMRoleToInstanceProfile -InstanceProfileName $DefaultElasticBeanstalkInstanceProfileName -RoleName $DefaultElasticBeanstalkInstanceProfileName
         New-Message $InfoMsg "Created Elastic Beanstalk instance profile $DefaultElasticBeanstalkInstanceProfileName." $MigrationRunLogFile
+    }
+    try {
+        New-Message $InfoMsg "Checking for default service role" $MigrationRunLogFile
+        Get-IAMRole -RoleName $DefaultElasticBeanstalkServiceRoleName | Out-Null
+    } catch {
+        New-Message $InfoMsg "Default Elastic Beanstalk service role $DefaultElasticBeanstalkServiceRoleName was not found." $MigrationRunLogFile
+        New-IAMRole -roleName $DefaultElasticBeanstalkServiceRoleName -AssumeRolePolicyDocument $(Get-Content -raw 'utils\iam_trust_relationship_eb.json')
+        Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkServiceRoleName -PolicyArn 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkService'
+        Register-IAMRolePolicy -RoleName $DefaultElasticBeanstalkServiceRoleName -PolicyArn 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth'
+        New-Message $InfoMsg "Creating IAM role $DefaultElasticBeanstalkServiceRoleName." $MigrationRunLogFile
+        New-Message $InfoMsg "Created IAM role $DefaultElasticBeanstalkServiceRoleName." $MigrationRunLogFile
     }
 }
 
@@ -2331,6 +2343,7 @@ New-Message $InfoMsg "Provide an AWS profile that the migrated application shoul
 $Global:glb_AwsProfileLocation = $Null
 $Global:glb_AwsProfileName = $Null
 $Global:DefaultElasticBeanstalkInstanceProfileName = "aws-elasticbeanstalk-ec2-role"
+$Global:DefaultElasticBeanstalkServiceRoleName = "aws-elasticbeanstalk-service-role"
 
 if ($DefaultAwsProfileFileLocation) {
     New-Message $InfoMsg "Default AWS profile file detected at '$DefaultAwsProfileFileLocation'." $MigrationRunLogFile
@@ -2367,7 +2380,7 @@ if ($AwsCredsObj) {
 try {
     # all other AWS verifications go here
     Verify-UserHasRequiredAWSPolicies
-    Verify-RequiredInstanceProfileExists
+    Verify-RequiredRolesExist
 } catch {
     $lastExceptionMessage = $error[0].Exception.Message
     New-Message $FatalMsg $lastExceptionMessage $MigrationRunLogFile
@@ -2785,9 +2798,9 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     }
 
     New-Message $InfoMsg "Creating a new Elastic Beanstalk environment using platform arn '$platformArn'..." $MigrationRunLogFile
-    $instanceProfileOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,IamInstanceProfile,aws-elasticbeanstalk-ec2-role
+    $instanceProfileOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,IamInstanceProfile,$DefaultElasticBeanstalkInstanceProfileName
     $instanceTypeOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,InstanceType,$instanceType
-    $serviceRoleOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:environment,ServiceRole,aws-elasticbeanstalk-service-role
+    $serviceRoleOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:environment,ServiceRole,$DefaultElasticBeanstalkServiceRoleName
     $environmentTypeOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:environment,EnvironmentType,SingleInstance
     $enhancedHealthReportingOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:healthreporting:system,SystemType,enhanced
 
