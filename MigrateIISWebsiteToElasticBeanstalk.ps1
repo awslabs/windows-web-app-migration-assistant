@@ -2148,7 +2148,9 @@ function Global:New-TempS3Bucket {
     $bucketName = "elastic-beanstalk-migration-" + $awsID + "-" + $(Get-Date -f yyyyMMddHHmmss)
     $null = New-S3Bucket -BucketName $bucketName -Region $BucketRegion -CannedACLName Private | Out-File -append $ItemCreationLogFile
     $null = Set-S3BucketEncryption -Region $BucketRegion -BucketName $bucketName -ServerSideEncryptionConfiguration_ServerSideEncryptionRule @{ServerSideEncryptionByDefault = @{ServerSideEncryptionAlgorithm = "AES256" } }
-    $result = Get-S3ACL -Bucketname $bucketName
+    Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
+        $result = Get-S3ACL -Bucketname $bucketName
+    }
     foreach ($grant in $result.Grants)
     {
         if ($grant.Grantee.URI -eq "http://acs.amazonaws.com/groups/global/AllUsers")
