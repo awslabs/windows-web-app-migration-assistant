@@ -2888,7 +2888,7 @@ if ($s3BucketToCleanUp -and $DeleteTempS3Buckets) {
 
 if ($deploymentSucceeded) {
     $ebEnvironment = Get-EBEnvironment -EnvironmentId $glb_EBEnvID
-    $applicationURL = $ebEnvironment.EndpointURL
+    $applicationURL = $ebEnvironment.CNAME
     Write-Host " "
     New-Message $InfoMsg "Note that it might take a few minutes for the application to be ready." $MigrationRunLogFile
     New-Message $InfoMsg "Application URL:" $MigrationRunLogFile
