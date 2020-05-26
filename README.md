@@ -3,6 +3,8 @@
 ### Overview
 The Windows Web Application Migration Assistant for AWS Elastic Beanstalk is an interactive PowerShell utility that migrates [ASP.NET](https://dotnet.microsoft.com/apps/aspnet) and [ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/?view=aspnetcore-3.1) applications from on-premises IIS Windows servers to Elastic Beanstalk. The migration assistant is able to migrate an entire website and its configuration to Elastic Beanstalk with minimal or no changes to the application. After the assistant migrates the application, Elastic Beanstalk automatically handles the ongoing details of capacity provisioning, load balancing, auto-scaling, application health monitoring, and applying patches and updates to the underlying platform. If you need to also migrate a database associated with your web application, you can separately use [AWS Database Migration Service](https://aws.amazon.com/dms/), [CloudEndure Migration](https://aws.amazon.com/cloudendure-migration/), or the [Windows to Linux Replatforming Assistant for Microsoft SQL Server Databases](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/replatform-sql-server.html).
 
+You can watch a demo video of the migration assistant [here](https://www.youtube.com/watch?v=Q-YnE5EA1-0&feature=youtu.be).
+
 To try out the migration assistant, run the [Migration Tutorial](https://aws.amazon.com/getting-started/hands-on/migrate-aspnet-web-application-elastic-beanstalk/) to migrate a sample ASP.NET website to Elastic Beanstalk.
 
 ### Migration Assistant Prerequisites
