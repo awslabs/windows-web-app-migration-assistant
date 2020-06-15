@@ -18,6 +18,39 @@
     MS PowerShell version 3.0 or above.
  #------------------------------------------------------------------------------------------------------------------------------#>
 
+ param (
+    [switch]$NonInteractiveMode = $False,
+    [string]$ProfileLocation,
+    [string]$ProfileName,
+    [string]$Region,
+    [string]$ApplicationIndex,
+    [string]$ConnectionStringIndex,
+    [string]$NewConnectionString,
+    [string]$WindowsPlatformIndex,
+    [string]$InstanceType,
+    [string]$ApplicationName
+)
+
+if ($NonInteractiveMode){
+    Write-Host "NonInteractiveMode: $NonInteractiveMode, Location: $ProfileLocation, Profile: $ProfileName, Region: $Region, ApplicationIndex: $ApplicationIndex, ConnectionStringIndex: $ConnectionStringIndex, NewConnectionString: $NewConnectionString, Platform Index: $WindowsPlatformIndex, InstanceType: $InstanceType, App Name: $ApplicationName"
+}
+
+$Global:mfarg_awsprofilename = $ProfileName
+$Global:mfarg_awsprofilelocation = $ProfileLocation
+$Global:mfarg_region = $Region
+$Global:mfarg_websitenumstr = $ApplicationIndex
+$Global:mfarg_glb_ebAppName = $ApplicationName
+$Global:mfarg_userInputWindowsStringNum = $WindowsPlatformIndex
+$Global:mfarg_instanceType = $InstanceType
+$Global:mfarg_userInputConnectionString = $NewConnectionString
+$Global:mfarg_userInputConnectionStringNum = $ConnectionStringIndex
+
+$Global:mfarg_userconsent = $False
+$Global:mfarg_userinputI = “NonInteractiveMode”
+$Global:mfarg_userinputY = “Y”
+$Global:mfarg_userinputK = “K”
+
+
 #Requires -RunAsAdministrator
 $ErrorActionPreference = "Stop"
 
@@ -2370,14 +2403,22 @@ $Global:DefaultElasticBeanstalkServiceRoleName = "aws-elasticbeanstalk-service-r
 if ($DefaultAwsProfileFileLocation) {
     New-Message $InfoMsg "Default AWS profile file detected at '$DefaultAwsProfileFileLocation'." $MigrationRunLogFile
     $glb_AwsProfileLocation = $DefaultAwsProfileFileLocation
-} else {
-    $glb_AwsProfileLocation = Get-UserInputString $MigrationRunLogFile "Enter file location, for example 'c:\aws\credentials', or press ENTER"
+} else {    
+    if ($NonInteractiveMode) {
+        $glb_AwsProfileLocation = $mfarg_awsprofilelocation
+    } else {
+        $glb_AwsProfileLocation = Get-UserInputString $MigrationRunLogFile "Enter file location, for example 'c:\aws\credentials', or press ENTER"
+    }
 }
 if ($DefaultAwsProfileName) {
     New-Message $InfoMsg "Default AWS profile name '$DefaultAwsProfileName' detected." $MigrationRunLogFile
     $glb_AwsProfileName = $DefaultAwsProfileName
 } else {
-    $glb_AwsProfileName = Get-UserInputString $MigrationRunLogFile "Enter the AWS profile name"
+    if ($NonInteractiveMode) {
+        $glb_AwsProfileName = $mfarg_awsprofilename
+    } else {
+        $glb_AwsProfileName = Get-UserInputString $MigrationRunLogFile "Enter the AWS profile name"
+    }
 }
 
 $AwsCredsObj = Get-AWSCredentials -ProfileName $glb_AwsProfileName -ProfileLocation $glb_AwsProfileLocation
@@ -2418,7 +2459,11 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     New-Message $InfoMsg "For a list of available AWS Regions, see:" $MigrationRunLogFile
     New-Message $InfoMsg "    https://docs.aws.amazon.com/general/latest/gr/rande.html" $MigrationRunLogFile
 
-    $regionInput = Get-UserInputString $MigrationRunLogFile "Enter the AWS Region [us-east-1]"
+    if ($NonInteractiveMode) {
+        $regionInput = $mfarg_regionInput
+    } else {
+        $regionInput = Get-UserInputString $MigrationRunLogFile "Enter the AWS Region [us-east-1]"
+    }
     if (!$regionInput) {
        $regionInput = "us-east-1"
     }
@@ -2453,8 +2498,11 @@ foreach ($site in $websites) {
 }
 
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
-    $websiteNumStr = Get-UserInputString $MigrationRunLogFile "Enter the number of the website to migrate: [1]"
-
+    if ($NonInteractiveMode) {
+        $websiteNumStr = $mfarg_websitenumstr
+    } else {
+        $websiteNumStr = Get-UserInputString $MigrationRunLogFile "Enter the number of the website to migrate: [1]"
+    }
     if (!$websiteNumStr) {
         $Global:glb_websiteToMigrate = $webSiteNameTable["1"]
     } else {
@@ -2494,7 +2542,11 @@ try {
         New-Message $FatalMsg "The migration assistant found incompatibilities for website '$glb_websiteToMigrate'." $MigrationRunLogFile
         if ($IgnoreMigrationReadinessWarnings) {
             New-Message $InfoMsg "The migration assistant found a custom setting directing it to ignore warnings. Continue the migration?" $MigrationRunLogFile
-            $userConsent = Get-UserInputString $MigrationRunLogFile "Press ENTER to continue"
+            if ($NonInteractiveMode) {
+                $userConsent = $mfarg_userconsent
+            } else {
+                $userConsent = Get-UserInputString $MigrationRunLogFile "Press ENTER to continue"
+            }
         } else {
             New-Message $InfoMsg "Contact the AWS migration support team for help with preparing the website for migration." $MigrationRunLogFile
             Exit-WithError
@@ -2504,7 +2556,12 @@ try {
 } catch {
     New-Message $FatalMsg $_ $MigrationRunLogFile
     New-Message $FatalMsg "The migration assistant is unable to generate a migration readiness report. The website might be unsupported for Elastic Beanstalk migration." $MigrationRunLogFile
-    $userInputI = Get-UserInputString $MigrationRunLogFile "Enter 'I' to ignore this warning and continue migration"
+    if ($NonInteractiveMode) {
+        $userInputI = $mfarg_userinputI
+    } else {
+        $userInputI = Get-UserInputString $MigrationRunLogFile "Enter 'I' to ignore this warning and continue migration"
+    }
+
     if ($userInputI -eq "I" -or $userInputI -eq "i") {
         New-Message $InfoMsg "Starting the Elastic Beanstalk migration." $MigrationRunLogFile
     } else {
@@ -2601,7 +2658,12 @@ $canAutoUpdateConnectionStrings = $True
 $connectionStringNumber = 1
 $connectionStringMatches = @{}
 while ($True) {
-    $userInputConnectionStringNum = Get-SensitiveUserInputString $MigrationRunLogFile "Enter the number of the connection string you would like to update, or press ENTER"
+    if ($NonInteractiveMode) {
+        $userInputConnectionStringNum = $mfarg_userInputConnectionStringNum
+    } else {
+        $userInputConnectionStringNum = Get-SensitiveUserInputString $MigrationRunLogFile "Enter the number of the connection string you would like to update, or press ENTER"
+    }
+
     if (!$userInputConnectionStringNum) {
         break
     }
@@ -2614,7 +2676,11 @@ while ($True) {
         $matchedStrings = Get-ChildItem -Path $siteFolder -Recurse -exclude "*.exe","*.dll" | Select-String -Pattern $userInputString -SimpleMatch
         if (-Not $matchedStrings) {
             New-Message $ErrorMsg "The migration assistant couldn't find this connection string in the project." $MigrationRunLogFile
-            $userInputY = Get-UserInputString $MigrationRunLogFile "Enter 'Y' to keep it on record (you will need to manually replace the connection strings), or anything else to re-enter the string"
+            if ($NonInteractiveMode) {
+                $userInputY = $mfarg_userinputY
+            } else {
+                $userInputY = Get-UserInputString $MigrationRunLogFile "Enter 'Y' to keep it on record (you will need to manually replace the connection strings), or anything else to re-enter the string"
+            }
             if ($userInputY -eq "Y" -or $userInputY -eq "y") {
                 continue
             }
@@ -2639,7 +2705,11 @@ New-Message $InfoMsg "----------------------------------------------------------
 if ($connectionStringMatches.Count -ne 0) {
 
     New-Message $InfoMsg "Migrate your database separately, if needed" $MigrationRunLogFile
-    $userInputEnter = Get-UserInputString $MigrationRunLogFile "Press ENTER to continue to the next step"
+    if ($NonInteractiveMode) {
+        continue
+    } else {
+        $userInputEnter = Get-UserInputString $MigrationRunLogFile "Press ENTER to continue to the next step"
+    }
     New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
     $userInputEnter = New-Message $InfoMsg "Continuing with connection string update..." $MigrationRunLogFile
 
@@ -2664,17 +2734,29 @@ if ($connectionStringMatches.Count -ne 0) {
         foreach ($connStrMatch in $connectionStringMatches.GetEnumerator()) {
                 New-Message $InfoMsg $($connStrMatch.Value) $MigrationRunLogFile
         }
-        $userInputEnter = Get-UserInputString $MigrationRunLogFile "Press ENTER when you're done"
+        if ($NonInteractiveMode) {
+            continue
+        } else {
+            $userInputEnter = Get-UserInputString $MigrationRunLogFile "Press ENTER when you're done"
+        }
     } else {
         foreach ($key in $connectionStringMatches.Keys) {
             New-Message $InfoMsg "Provide a replacement connection string for:" $MigrationRunLogFile
             New-Message $ConsoleOnlyMsg "    $key" $MigrationRunLogFile
             Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
-                $userInputString = Get-SensitiveUserInputString $MigrationRunLogFile "Enter a new connection string"
+                if ($NonInteractiveMode) {
+                    $userInputString = $mfarg_userInputConnectionString
+                } else {
+                    $userInputString = Get-SensitiveUserInputString $MigrationRunLogFile "Enter a new connection string"
+                }
                 $verified = Test-DBConnection $userInputString
                 if (-Not $verified) {
                     New-Message $ErrorMsg "The migration assistant can't verify the connection string. Type `"K`" to keep the connection string anyway." $MigrationRunLogFile
-                    $userInputK = Get-UserInputString $MigrationRunLogFile "Press ENTER to retry"
+                    if ($NonInteractiveMode) {
+                        $userInputK = $mfarg_userinputK
+                    } else {
+                        $userInputK = Get-UserInputString $MigrationRunLogFile "Press ENTER to retry"
+                    }
                     if ($userInputK -ne "K" -or $userInputK -ne "k") {
                         throw "Please re-enter the last connection string."
                     }
@@ -2765,7 +2847,11 @@ try {
 }
 
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
-    $Global:glb_ebAppName = Get-UserInputString $MigrationRunLogFile "Enter a unique name for your new Elastic Beanstalk application"
+    if ($NonInteractiveMode) {
+        $Global:glb_ebAppName = $mfarg_glb_ebAppName
+    } else {
+        $Global:glb_ebAppName = Get-UserInputString $MigrationRunLogFile "Enter a unique name for your new Elastic Beanstalk application"
+    }
     New-Message $InfoMsg "Creating a new Elastic Beanstalk application..." $MigrationRunLogFile
     New-EBApplication -ApplicationName $glb_ebAppName
 }
@@ -2792,7 +2878,11 @@ $environmentName = $glb_ebAppName + "-env"
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     $userInputWindowsVersion =  $windowsVersions[0]
 
-    $userInputWindowsStringNum = Get-UserInputString $MigrationRunLogFile "Enter the number of the Windows version for your Elastic Beanstalk environment [1]"
+    if ($NonInteractiveMode) {
+        $userInputWindowsStringNum = $mfarg_userInputWindowsStringNum
+    } else {
+        $userInputWindowsStringNum = Get-UserInputString $MigrationRunLogFile "Enter the number of the Windows version for your Elastic Beanstalk environment [1]"
+    }
     if (!$userInputWindowsStringNum){
         $userInputWindowsStringNum = 1
     }
@@ -2814,7 +2904,12 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     New-Message $InfoMsg "    https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html#platforms-supported.net" $MigrationRunLogFile
     New-Message $InfoMsg " " $MigrationRunLogFile
 
-    $instanceType = Get-UserInputString $MigrationRunLogFile "Enter the instance type [t3.medium]"
+    if ($NonInteractiveMode) {
+        $instanceType = $mfarg_instanceType
+    } else {
+        $instanceType = Get-UserInputString $MigrationRunLogFile "Enter the instance type [t3.medium]"
+
+    }
     if (!$instanceType) {
         $instanceType = "t3.medium"
     }
