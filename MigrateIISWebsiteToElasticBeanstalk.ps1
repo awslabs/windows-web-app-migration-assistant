@@ -2818,12 +2818,27 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     if (!$instanceType) {
         $instanceType = "t3.medium"
     }
+    $environmentTypeOptions = @("SingleInstance", "LoadBalanced")
+    $optionNumber = 1
+    foreach ($environmentTypeOption in $environmentTypeOptions) {
+        $LogMsg = "[" + $optionNumber + "] : " + $environmentTypeOption
+        New-Message $ConsoleOnlyMsg $LogMsg $MigrationRunLogFile
+        $optionNumber = $optionNumber + 1
+    }
+    New-Message $InfoMsg " " $MigrationRunLogFile
+
+    $userInputEnvironmentTypeNum = Get-UserInputString $MigrationRunLogFile "Enter the environment type [SingleInstance]"
+    if (!$userInputEnvironmentTypeNum){
+        $userInputEnvironmentTypeNum = 1
+    }
+    Validate-NumberedListUserInput $([int]$userInputEnvironmentTypeNum) 1 $environmentTypeOptions.Count
+    $environmentType = $environmentTypeOptions[([int]$userInputEnvironmentTypeNum)-1]
 
     New-Message $InfoMsg "Creating a new Elastic Beanstalk environment using platform arn '$platformArn'..." $MigrationRunLogFile
     $instanceProfileOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,IamInstanceProfile,$DefaultElasticBeanstalkInstanceProfileName
     $instanceTypeOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,InstanceType,$instanceType
     $serviceRoleOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:environment,ServiceRole,$DefaultElasticBeanstalkServiceRoleName
-    $environmentTypeOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:environment,EnvironmentType,SingleInstance
+    $environmentTypeOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:environment,EnvironmentType,$environmentType
     $enhancedHealthReportingOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:healthreporting:system,SystemType,enhanced
 
     $optionSettings = $instanceProfileOptionSetting,$instanceTypeOptionSetting,$serviceRoleOptionSetting,$environmentTypeOptionSetting,$enhancedHealthReportingOptionSetting
