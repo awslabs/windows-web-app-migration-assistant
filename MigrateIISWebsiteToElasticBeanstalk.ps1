@@ -2915,7 +2915,7 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     if (!$instanceType) {
         $instanceType = "t3.medium"
     }
-    
+
     New-Message $InfoMsg " " $MigrationRunLogFile
     $environmentTypeOptions = @("SingleInstance", "LoadBalanced")
     $optionNumber = 1
@@ -2938,7 +2938,7 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     Validate-NumberedListUserInput $([int]$userInputEnvironmentTypeNum) 1 $environmentTypeOptions.Count
     $environmentType = $environmentTypeOptions[([int]$userInputEnvironmentTypeNum)-1]
 
-    New-Message $InfoMsg "Creating a new Elastic Beanstalk environment using platform arn '$platformArn'..." $MigrationRunLogFile
+    New-Message $InfoMsg "Creating a new Elastic Beanstalk environment using platform arn '$platformArn', environment type '$environmentType', and instance type '$instanceType'" $MigrationRunLogFile
     $instanceProfileOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,IamInstanceProfile,$DefaultElasticBeanstalkInstanceProfileName
     $instanceTypeOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,InstanceType,$instanceType
     $serviceRoleOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:environment,ServiceRole,$DefaultElasticBeanstalkServiceRoleName
