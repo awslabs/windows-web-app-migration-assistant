@@ -28,11 +28,12 @@
     [string]$NewConnectionString,
     [string]$WindowsPlatformIndex,
     [string]$InstanceType,
-    [string]$ApplicationName
+    [string]$ApplicationName,
+    [string]$EnvironmentType
 )
 
 if ($NonInteractiveMode){
-    Write-Host "NonInteractiveMode: $NonInteractiveMode, Location: $ProfileLocation, Profile: $ProfileName, Region: $Region, ApplicationIndex: $ApplicationIndex, ConnectionStringIndex: $ConnectionStringIndex, NewConnectionString: $NewConnectionString, Platform Index: $WindowsPlatformIndex, InstanceType: $InstanceType, App Name: $ApplicationName"
+    Write-Host "NonInteractiveMode: $NonInteractiveMode, Location: $ProfileLocation, Profile: $ProfileName, Region: $Region, ApplicationIndex: $ApplicationIndex, ConnectionStringIndex: $ConnectionStringIndex, NewConnectionString: $NewConnectionString, Platform Index: $WindowsPlatformIndex, InstanceType: $InstanceType, App Name: $ApplicationName, Environment Type: $EnvironmentType"
 }
 
 $Global:mfarg_awsprofilename = $ProfileName
@@ -44,6 +45,7 @@ $Global:mfarg_userInputWindowsStringNum = $WindowsPlatformIndex
 $Global:mfarg_instanceType = $InstanceType
 $Global:mfarg_userInputConnectionString = $NewConnectionString
 $Global:mfarg_userInputConnectionStringNum = $ConnectionStringIndex
+$Global:mfarg_userInputEnvironmentTypeNum = $EnvironmentType
 
 $Global:mfarg_userconsent = $False
 $Global:mfarg_userinputI = “NonInteractiveMode”
@@ -2921,8 +2923,12 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
         $optionNumber = $optionNumber + 1
     }
     New-Message $InfoMsg " " $MigrationRunLogFile
-
-    $userInputEnvironmentTypeNum = Get-UserInputString $MigrationRunLogFile "Enter the environment type [SingleInstance]"
+    if ($NonInteractiveMode) {
+        $userInputEnvironmentTypeNum = $mfarg_userInputEnvironmentTypeNum
+    } else {
+        $userInputEnvironmentTypeNum = Get-UserInputString $MigrationRunLogFile "Enter the environment type [1]"
+    }
+    
     if (!$userInputEnvironmentTypeNum){
         $userInputEnvironmentTypeNum = 1
     }
