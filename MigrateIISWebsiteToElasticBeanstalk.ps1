@@ -2915,8 +2915,11 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     if (!$instanceType) {
         $instanceType = "t3.medium"
     }
+    
+    New-Message $InfoMsg " " $MigrationRunLogFile
     $environmentTypeOptions = @("SingleInstance", "LoadBalanced")
     $optionNumber = 1
+    New-Message $InfoMsg "Elastic Beanstalk supports the following environment types:" $MigrationRunLogFile
     foreach ($environmentTypeOption in $environmentTypeOptions) {
         $LogMsg = "[" + $optionNumber + "] : " + $environmentTypeOption
         New-Message $ConsoleOnlyMsg $LogMsg $MigrationRunLogFile
