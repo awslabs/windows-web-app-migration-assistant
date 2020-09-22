@@ -48,9 +48,9 @@ $Global:mfarg_userInputConnectionStringNum = $ConnectionStringIndex
 $Global:mfarg_userInputEnvironmentTypeNum = $EnvironmentType
 
 $Global:mfarg_userconsent = $False
-$Global:mfarg_userinputI = “NonInteractiveMode”
-$Global:mfarg_userinputY = “Y”
-$Global:mfarg_userinputK = “K”
+$Global:mfarg_userinputI = "NonInteractiveMode"
+$Global:mfarg_userinputY = "Y"
+$Global:mfarg_userinputK = "K"
 
 
 #Requires -RunAsAdministrator
