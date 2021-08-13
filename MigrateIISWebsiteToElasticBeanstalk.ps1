@@ -1875,7 +1875,7 @@ function Global:ConvertTo-EBApplicationFolder {
     $scriptsPath = New-Folder $FolderPath "scripts" $True
 
     New-CustomDeploymentFile "aws-windows-deployment-manifest.json" $FolderPath $WebsiteName
-    New-CustomDeploymentFile "site_install.ps1" $scriptsPath $WebsiteName None
+    New-CustomDeploymentFile "site_install.ps1" $scriptsPath $WebsiteName $null
     New-CustomDeploymentFile "site_post_install.ps1" $scriptsPath $WebsiteName
     New-CustomDeploymentFile "site_restart.ps1" $scriptsPath $WebsiteName
     New-CustomDeploymentFile "site_uninstall.ps1" $scriptsPath $WebsiteName
