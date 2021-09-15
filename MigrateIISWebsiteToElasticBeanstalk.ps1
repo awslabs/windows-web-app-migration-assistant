@@ -2399,62 +2399,62 @@ New-Message $InfoMsg "----------------------------------------------------------
 if (-Not $ReportOnly)
 {
 
-    New-Message $InfoMsg "Provide an AWS profile that the migrated application should use." $MigrationRunLogFile
+New-Message $InfoMsg "Provide an AWS profile that the migrated application should use." $MigrationRunLogFile
 
-    $Global:glb_AwsProfileLocation = $Null
-    $Global:glb_AwsProfileName = $Null
-    $Global:DefaultElasticBeanstalkInstanceProfileName = "aws-elasticbeanstalk-ec2-role"
-    $Global:DefaultElasticBeanstalkServiceRoleName = "aws-elasticbeanstalk-service-role"
+$Global:glb_AwsProfileLocation = $Null
+$Global:glb_AwsProfileName = $Null
+$Global:DefaultElasticBeanstalkInstanceProfileName = "aws-elasticbeanstalk-ec2-role"
+$Global:DefaultElasticBeanstalkServiceRoleName = "aws-elasticbeanstalk-service-role"
 
-    if ($DefaultAwsProfileFileLocation) {
-        New-Message $InfoMsg "Default AWS profile file detected at '$DefaultAwsProfileFileLocation'." $MigrationRunLogFile
-        $glb_AwsProfileLocation = $DefaultAwsProfileFileLocation
-    } else {    
-        if ($NonInteractiveMode) {
-            $glb_AwsProfileLocation = $mfarg_awsprofilelocation
-        } else {
-            $glb_AwsProfileLocation = Get-UserInputString $MigrationRunLogFile "Enter file location, for example 'c:\aws\credentials', or press ENTER"
-        }
-    }
-    if ($DefaultAwsProfileName) {
-        New-Message $InfoMsg "Default AWS profile name '$DefaultAwsProfileName' detected." $MigrationRunLogFile
-        $glb_AwsProfileName = $DefaultAwsProfileName
+if ($DefaultAwsProfileFileLocation) {
+    New-Message $InfoMsg "Default AWS profile file detected at '$DefaultAwsProfileFileLocation'." $MigrationRunLogFile
+    $glb_AwsProfileLocation = $DefaultAwsProfileFileLocation
+} else {    
+    if ($NonInteractiveMode) {
+        $glb_AwsProfileLocation = $mfarg_awsprofilelocation
     } else {
-        if ($NonInteractiveMode) {
-            $glb_AwsProfileName = $mfarg_awsprofilename
-        } else {
-            $glb_AwsProfileName = Get-UserInputString $MigrationRunLogFile "Enter the AWS profile name"
-        }
+        $glb_AwsProfileLocation = Get-UserInputString $MigrationRunLogFile "Enter file location, for example 'c:\aws\credentials', or press ENTER"
     }
-
-    $AwsCredsObj = Get-AWSCredentials -ProfileName $glb_AwsProfileName -ProfileLocation $glb_AwsProfileLocation
-    if ($AwsCredsObj) {
-        $AwsCreds = $AwsCredsObj.GetCredentials()
-        $accessKey = $AwsCreds.accesskey
-        $secretKey = $AwsCreds.secretkey
-        if (-Not $accessKey) {
-            New-Message $FatalMsg "Error: Invalid AWS access key. Be sure to provide the correct AWS profile." $MigrationRunLogFile
-            Exit-WithError
-        }
-        if (-Not $secretKey) {
-            New-Message $FatalMsg "Error: Invalid AWS secret key. Be sure to provide the correct AWS profile." $MigrationRunLogFile
-            Exit-WithError
-        }
-        Set-AWSCredential -AccessKey $accessKey -SecretKey $secretKey
+}
+if ($DefaultAwsProfileName) {
+    New-Message $InfoMsg "Default AWS profile name '$DefaultAwsProfileName' detected." $MigrationRunLogFile
+    $glb_AwsProfileName = $DefaultAwsProfileName
+} else {
+    if ($NonInteractiveMode) {
+        $glb_AwsProfileName = $mfarg_awsprofilename
     } else {
-        New-Message $FatalMsg "Error: Invalid AWS credentials. Be sure to provide the correct AWS profile." $MigrationRunLogFile
+        $glb_AwsProfileName = Get-UserInputString $MigrationRunLogFile "Enter the AWS profile name"
+    }
+}
+
+$AwsCredsObj = Get-AWSCredentials -ProfileName $glb_AwsProfileName -ProfileLocation $glb_AwsProfileLocation
+if ($AwsCredsObj) {
+    $AwsCreds = $AwsCredsObj.GetCredentials()
+    $accessKey = $AwsCreds.accesskey
+    $secretKey = $AwsCreds.secretkey
+    if (-Not $accessKey) {
+        New-Message $FatalMsg "Error: Invalid AWS access key. Be sure to provide the correct AWS profile." $MigrationRunLogFile
         Exit-WithError
     }
-
-    try {
-        # all other AWS verifications go here
-        Verify-UserHasRequiredAWSPolicies
-        Verify-RequiredRolesExist
-    } catch {
-        $lastExceptionMessage = $error[0].Exception.Message
-        New-Message $FatalMsg $lastExceptionMessage $MigrationRunLogFile
+    if (-Not $secretKey) {
+        New-Message $FatalMsg "Error: Invalid AWS secret key. Be sure to provide the correct AWS profile." $MigrationRunLogFile
         Exit-WithError
     }
+    Set-AWSCredential -AccessKey $accessKey -SecretKey $secretKey
+} else {
+    New-Message $FatalMsg "Error: Invalid AWS credentials. Be sure to provide the correct AWS profile." $MigrationRunLogFile
+    Exit-WithError
+}
+
+try {
+    # all other AWS verifications go here
+    Verify-UserHasRequiredAWSPolicies
+    Verify-RequiredRolesExist
+} catch {
+    $lastExceptionMessage = $error[0].Exception.Message
+    New-Message $FatalMsg $lastExceptionMessage $MigrationRunLogFile
+    Exit-WithError
+}
 
 # Collect AWS region
 
