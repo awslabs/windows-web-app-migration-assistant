@@ -2969,12 +2969,12 @@ $environmentReady = $False
 $waitTime = (Date).AddMinutes(10)
 while ((Date) -lt $waitTime) {
     try{
-        Update-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $environmentName -VersionLabel $versionLabel
-        $environmentReady = $true
-        break
+       Update-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $environmentName -VersionLabel $versionLabel
+       $environmentReady = $true
+       break
     } catch {
-        Start-Sleep -Milliseconds 30000 # sleep for 30 seconds
-        Append-DotsToLatestMessage 1
+       Start-Sleep -Milliseconds 30000 # sleep for 30 seconds
+       Append-DotsToLatestMessage 1
     }
 }
 $env = Get-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $environmentName -Region $glb_AwsRegion
