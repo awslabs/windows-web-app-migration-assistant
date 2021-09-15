@@ -2470,7 +2470,7 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
         $regionInput = Get-UserInputString $MigrationRunLogFile "Enter the AWS Region [us-east-1]"
     }
     if (!$regionInput) {
-    $regionInput = "us-east-1"
+        $regionInput = "us-east-1"
     }
     $Global:glb_AwsRegion = Get-AWSRegion $regionInput
     if ($glb_AwsRegion -is [system.array] -or $glb_AwsRegion.name -eq "unknown") {
@@ -2578,7 +2578,9 @@ try {
 
 New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
 
+
 # Back up the website
+
 if (-Not $ReportOnly)
 {
 $appBundleFolderName = "EB-Application"
@@ -2967,12 +2969,12 @@ $environmentReady = $False
 $waitTime = (Date).AddMinutes(10)
 while ((Date) -lt $waitTime) {
     try{
-    Update-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $environmentName -VersionLabel $versionLabel
-    $environmentReady = $true
-    break
+        Update-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $environmentName -VersionLabel $versionLabel
+        $environmentReady = $true
+        break
     } catch {
-    Start-Sleep -Milliseconds 30000 # sleep for 30 seconds
-    Append-DotsToLatestMessage 1
+        Start-Sleep -Milliseconds 30000 # sleep for 30 seconds
+        Append-DotsToLatestMessage 1
     }
 }
 $env = Get-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $environmentName -Region $glb_AwsRegion
