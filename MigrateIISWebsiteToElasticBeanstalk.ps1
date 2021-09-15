@@ -2470,7 +2470,7 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
         $regionInput = Get-UserInputString $MigrationRunLogFile "Enter the AWS Region [us-east-1]"
     }
     if (!$regionInput) {
-        $regionInput = "us-east-1"
+       $regionInput = "us-east-1"
     }
     $Global:glb_AwsRegion = Get-AWSRegion $regionInput
     if ($glb_AwsRegion -is [system.array] -or $glb_AwsRegion.name -eq "unknown") {
