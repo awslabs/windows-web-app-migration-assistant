@@ -30,7 +30,7 @@
     [string]$InstanceType,
     [string]$ApplicationName,
     [string]$EnvironmentType,
-    [string]$ReportOnly = $False
+    [switch]$ReportOnly = $False
 )
 
 if ($NonInteractiveMode){
