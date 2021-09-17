@@ -29,7 +29,8 @@
     [string]$WindowsPlatformIndex,
     [string]$InstanceType,
     [string]$ApplicationName,
-    [string]$EnvironmentType
+    [string]$EnvironmentType,
+    [switch]$ReportOnly = $False
 )
 
 if ($NonInteractiveMode){
@@ -2395,6 +2396,9 @@ New-Message $InfoMsg "----------------------------------------------------------
 
 # AWS profile collection
 
+if (-Not $ReportOnly)
+{
+
 New-Message $InfoMsg "Provide an AWS profile that the migrated application should use." $MigrationRunLogFile
 
 $Global:glb_AwsProfileLocation = $Null
@@ -2478,8 +2482,9 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
 Set-DefaultAWSRegion $glb_AwsRegion
 New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
 
-# Determine the website to migrate
+}
 
+# Determine the website to migrate
 $serverObj = Get-IISServerInfoObject
 Write-IISServerInfo $EnvironmentInfoLogFile
 
@@ -2577,6 +2582,8 @@ New-Message $InfoMsg "----------------------------------------------------------
 
 # Back up the website
 
+if (-Not $ReportOnly)
+{
 $appBundleFolderName = "EB-Application"
 $appBundleFolderPath = New-Folder $CurrentMigrationRunPath $appBundleFolderName $True
 $msDeployStdOutLog = New-File $LogFolderPath "msDeployStdOut.log" $True
@@ -3017,5 +3024,5 @@ if ($deploymentSucceeded) {
 } else {
     New-Message $ErrorMsg "The Elastic Beanstalk deployment failed. You can check the deployment log in the Elastic Beanstalk console." $MigrationRunLogFile
 }
-
+}
 Exit-WithoutError
