@@ -1164,7 +1164,7 @@ function Global:Get-MissingDependencies {
     }
 
     # check for AWSPowerShell
-    if (!(Get-Module -ListAvailable -Name "AWSPowerShell")) {
+    if (!$ReportOnly -And !(Get-Module -ListAvailable -Name "AWSPowerShell")) {
         $missingDependencies += "AWSPowerShell, "
     }
 
@@ -2362,7 +2362,10 @@ $Global:DefaultAwsProfileName = $settings.defaultAwsProfileName
 $Global:IgnoreMigrationReadinessWarnings = [boolean]::Parse($settings.ignoreMigrationReadinessWarnings)
 $Global:DeleteTempS3Buckets = [boolean]::Parse($settings.deleteTempS3Buckets)
 
-Import-Module AWSPowerShell
+if (!$ReportOnly)
+{
+    Import-Module AWSPowerShell
+}
 Import-Module WebAdministration
 Add-Type -Assembly System.IO.Compression.FileSystem
 Setup-Workspace                                     # set up global variables
