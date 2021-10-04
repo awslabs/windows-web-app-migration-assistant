@@ -29,7 +29,12 @@ $declareParam='-declareParamFile:"C:\staging\site_content\parameters.xml"' # do 
     $declareParam
 )
 
-Start-Process $msDeployExe -ArgumentList $msDeployPackagingArgs -NoNewWindow -Wait -PassThru -RedirectStandardOutput $msDeployStdOutPackagingTimeLog -RedirectStandardError $msDeployStdErrPackagingTimeLog
+$process = Start-Process $msDeployExe -ArgumentList $msDeployPackagingArgs -NoNewWindow -Wait -PassThru -RedirectStandardOutput $msDeployStdOutPackagingTimeLog -RedirectStandardError $msDeployStdErrPackagingTimeLog
+if ( 0 -ne $process.ExitCode )
+{
+  Write-Output "ERROR: msdeploy.exe exits with nonzero exitcode"
+  exit $process.ExitCode
+}
 
 # deploy to local server
 
