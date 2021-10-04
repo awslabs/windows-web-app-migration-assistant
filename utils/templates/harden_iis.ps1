@@ -19,7 +19,7 @@ Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter "system.w
 Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT' -filter "system.web/machineKey" -name "validation" -value "AES"
 
 # (L1) Ensure Double-Encoded requests will be rejected 
-Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter "system.webServer/security/requestFiltering" -name "allowDoubleEscaping" -value "True"
+Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter "system.webServer/security/requestFiltering" -name "allowDoubleEscaping" -value "False"
 
 # (L1) Ensure 'HTTP Trace Method' is disabled 
 Add-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter "system.webServer/security/requestFiltering/verbs" -name "." -value @{verb='TRACE';allowed='False'}

@@ -1528,10 +1528,17 @@ function Global:Get-CheckAppProtocols {
     $NonHTTPProtStr = ""
     $Result = $true
 
+    $FoundWebSite = $false
     foreach ($site in Get-WebSite) {
         if ($site.name -eq $SiteName) {
+            $FoundWebSite = $true
             break
         }
+    }
+
+    if ( $FoundWebSite -ne $true ) {
+        Write-Output "ERROR : Did not find $SiteName"
+        throw "ERROR: Did not find $SiteName"
     }
 
     foreach ($Prot in $site.bindings.protocol) {
