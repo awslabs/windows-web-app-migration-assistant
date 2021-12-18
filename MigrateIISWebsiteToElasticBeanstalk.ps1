@@ -2073,7 +2073,7 @@ function Global:Verify-UserHasRequiredAWSPolicies {
         .SYNOPSIS
             This function verifies that the current AWS user has the following AWS managed policies:
                 1. IAMReadOnlyAccess (only needed for Get-IAMAttachedUserPolicyList)
-                2. AWSElasticBeanstalkFullAccess (needed for EB application deployment operations)
+                2. AdministratorAccess-AWSElasticBeanstalk (needed for EB application deployment operations)
         .INPUTS
             None
         .OUTPUTS
@@ -2089,11 +2089,11 @@ function Global:Verify-UserHasRequiredAWSPolicies {
     }
 
     foreach ($policy in $policies) {
-        if ($policy.PolicyName -eq "AWSElasticBeanstalkFullAccess") {
+        if ($policy.PolicyName -eq "AdministratorAccess-AWSElasticBeanstalk") {
             return
         }
     }
-    throw "ERROR: Please make sure that the AWS managed policy AWSElasticBeanstalkFullAccess is attached to the current user"    
+    throw "ERROR: Please make sure that the AWS managed policy AdministratorAccess-AWSElasticBeanstalk is attached to the current user"    
 }
 
 function Global:Verify-RequiredRolesExist {
