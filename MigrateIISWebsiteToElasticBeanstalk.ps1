@@ -2073,7 +2073,7 @@ function Global:Verify-UserHasRequiredAWSPolicies {
         .SYNOPSIS
             This function verifies that the current AWS user has the following AWS managed policies:
                 1. IAMReadOnlyAccess (only needed for Get-IAMAttachedUserPolicyList)
-                2. AWSElasticBeanstalkFullAccess (needed for EB application deployment operations)
+                2. AdministratorAccess-AWSElasticBeanstalk (needed for EB application deployment operations)
         .INPUTS
             None
         .OUTPUTS
@@ -2089,11 +2089,11 @@ function Global:Verify-UserHasRequiredAWSPolicies {
     }
 
     foreach ($policy in $policies) {
-        if ($policy.PolicyName -eq "AWSElasticBeanstalkFullAccess") {
+        if ($policy.PolicyName -eq "AdministratorAccess-AWSElasticBeanstalk") {
             return
         }
     }
-    throw "ERROR: Please make sure that the AWS managed policy AWSElasticBeanstalkFullAccess is attached to the current user"    
+    throw "ERROR: Please make sure that the AWS managed policy AdministratorAccess-AWSElasticBeanstalk is attached to the current user"    
 }
 
 function Global:Verify-RequiredRolesExist {
@@ -2473,7 +2473,7 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     New-Message $InfoMsg "    https://docs.aws.amazon.com/general/latest/gr/rande.html" $MigrationRunLogFile
 
     if ($NonInteractiveMode) {
-        $regionInput = $mfarg_regionInput
+        $regionInput = $mfarg_region
     } else {
         $regionInput = Get-UserInputString $MigrationRunLogFile "Enter the AWS Region [us-east-1]"
     }
@@ -3006,13 +3006,18 @@ while ((Date) -lt $waitTime) {
             $deploymentSucceeded = $True
             break
         }
-    } elseif ($health -eq "Red" -or $health -eq "Yellow") {
-        $deploymentSucceeded = $False
-        break
     }
-    # else health = Grey: deployment in process
+    # else health = Grey: deployment in process. Red: error can happen, but it can still recuperate
     Start-Sleep -Milliseconds 30000 # sleep for 30 seconds
     Append-DotsToLatestMessage 1
+}
+
+# if it's still Red or Yellow after 30 minutes, deployment failed
+$ebEnvironment = Get-EBEnvironment -EnvironmentId $glb_EBEnvID
+$health = $ebEnvironment.Health
+if ($health -eq "Red" -or $health -eq "Yellow") {
+    $deploymentSucceeded = $False
+    break
 }
 
 if ($s3BucketToCleanUp -and $DeleteTempS3Buckets) {
