@@ -2081,14 +2081,19 @@ function Global:Verify-UserHasRequiredAWSPolicies {
     #>
 
     try {
+        New-Message $InfoMsg "Calling Get-STSCallerIdentity" $MigrationRunLogFile
         $stsIdentity = Get-STSCallerIdentity
+        New-Message $InfoMsg "Calling Split on $stsIdentity.Arn" $MigrationRunLogFile
         $userName = $stsIdentity.Arn.Split("/")[-1]
+        New-Message $InfoMsg "Calling Get-IAMAttachedUserPolicyList" $MigrationRunLogFile
         $policies = Get-IAMAttachedUserPolicyList -UserName $userName
     } catch {
-        New-Message $ErrorMsg $_.ErrorDetails $MigrationRunLogFile
-        New-Message $ErrorMsg $_.Exception $MigrationRunLogFile
-        New-Message $ErrorMsg $_.ScriptStackTrace $MigrationRunLogFile
-        throw "ERROR: Please make sure that your AWS credentials are correct and the AWS managed policy IAMReadOnlyAccess is attached to the current user"
+        if ([string]::IsNullOrWhitespace($_.ErrorDetails)){
+            throw "ERROR: Please make sure that your AWS credentials are correct and the AWS managed policy IAMReadOnlyAccess is attached to the current user"
+        }
+        else {
+            throw $_.Exception
+        }
     }
 
     foreach ($policy in $policies) {
