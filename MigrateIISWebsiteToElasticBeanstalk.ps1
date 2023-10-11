@@ -2083,6 +2083,7 @@ function Global:Verify-UserHasRequiredAWSPolicies {
     try {
         New-Message $InfoMsg "Calling Get-STSCallerIdentity" $MigrationRunLogFile
         $stsIdentity = Get-STSCallerIdentity
+        New-Message $InfoMsg "Received $stsIdentity" $MigrationRunLogFile
         New-Message $InfoMsg "Calling Split on $stsIdentity.Arn" $MigrationRunLogFile
         $userName = $stsIdentity.Arn.Split("/")[-1]
         New-Message $InfoMsg "Calling Get-IAMAttachedUserPolicyList" $MigrationRunLogFile
