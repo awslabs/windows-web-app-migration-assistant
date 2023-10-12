@@ -2453,17 +2453,6 @@ if ($AwsCredsObj) {
     Exit-WithError
 }
 
-try {
-    # all other AWS verifications go here
-    Verify-UserHasRequiredAWSPolicies
-    Verify-RequiredRolesExist
-} catch {
-    $lastExceptionMessage = $error[0].Exception.Message
-    New-Message $FatalMsg $lastExceptionMessage $MigrationRunLogFile
-    Exit-WithError
-}
-
-
 # Collect AWS region
 
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
@@ -2489,6 +2478,16 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
 Set-DefaultAWSRegion $glb_AwsRegion
 New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
 
+}
+
+try {
+    # all other AWS verifications go here
+    Verify-UserHasRequiredAWSPolicies
+    Verify-RequiredRolesExist
+} catch {
+    $lastExceptionMessage = $error[0].Exception.Message
+    New-Message $FatalMsg $lastExceptionMessage $MigrationRunLogFile
+    Exit-WithError
 }
 
 # Determine the website to migrate
