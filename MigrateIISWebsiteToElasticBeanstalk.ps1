@@ -2081,20 +2081,11 @@ function Global:Verify-UserHasRequiredAWSPolicies {
     #>
 
     try {
-        New-Message $InfoMsg "Calling Get-STSCallerIdentity" $MigrationRunLogFile
-        $stsIdentity = Get-STSCallerIdentity
-        New-Message $InfoMsg "Received $stsIdentity" $MigrationRunLogFile
-        New-Message $InfoMsg "Calling Split on $stsIdentity.Arn" $MigrationRunLogFile
+        $stsIdentity = Get-STSCallerIdentity -Region $glb_AwsRegion
         $userName = $stsIdentity.Arn.Split("/")[-1]
-        New-Message $InfoMsg "Calling Get-IAMAttachedUserPolicyList" $MigrationRunLogFile
         $policies = Get-IAMAttachedUserPolicyList -UserName $userName
     } catch {
-        if ([string]::IsNullOrWhitespace($_.ErrorDetails)){
-            throw "ERROR: Please make sure that your AWS credentials are correct and the AWS managed policy IAMReadOnlyAccess is attached to the current user"
-        }
-        else {
-            throw $_.Exception
-        }
+        throw "ERROR: Please make sure that your AWS credentials are correct, and the AWS managed policy IAMReadOnlyAccess is attached to the current user"
     }
 
     foreach ($policy in $policies) {
@@ -2462,17 +2453,6 @@ if ($AwsCredsObj) {
     Exit-WithError
 }
 
-try {
-    # all other AWS verifications go here
-    Verify-UserHasRequiredAWSPolicies
-    Verify-RequiredRolesExist
-} catch {
-    $lastExceptionMessage = $error[0].Exception.Message
-    New-Message $FatalMsg $lastExceptionMessage $MigrationRunLogFile
-    Exit-WithError
-}
-
-
 # Collect AWS region
 
 Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
@@ -2498,6 +2478,16 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
 Set-DefaultAWSRegion $glb_AwsRegion
 New-Message $InfoMsg "------------------------------------------------------------------------------------------" $MigrationRunLogFile
 
+}
+
+try {
+    # all other AWS verifications go here
+    Verify-UserHasRequiredAWSPolicies
+    Verify-RequiredRolesExist
+} catch {
+    $lastExceptionMessage = $error[0].Exception.Message
+    New-Message $FatalMsg $lastExceptionMessage $MigrationRunLogFile
+    Exit-WithError
 }
 
 # Determine the website to migrate
