@@ -2081,7 +2081,7 @@ function Global:Verify-UserHasRequiredAWSPolicies {
     #>
 
     try {
-        $stsIdentity = Get-STSCallerIdentity -Region $glb_AwsRegion
+        $stsIdentity = Get-STSCallerIdentity
         $userName = $stsIdentity.Arn.Split("/")[-1]
         $policies = Get-IAMAttachedUserPolicyList -UserName $userName
     } catch {
