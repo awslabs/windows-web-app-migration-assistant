@@ -2957,8 +2957,9 @@ Invoke-CommandsWithRetry 99 $MigrationRunLogFile {
     $serviceRoleOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:environment,ServiceRole,$DefaultElasticBeanstalkServiceRoleName
     $environmentTypeOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:environment,EnvironmentType,$environmentType
     $enhancedHealthReportingOptionSetting = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:elasticbeanstalk:healthreporting:system,SystemType,enhanced
+    $disableIMDSv1 = New-Object Amazon.ElasticBeanstalk.Model.ConfigurationOptionSetting -ArgumentList aws:autoscaling:launchconfiguration,DisableIMDSv1,$true
 
-    $optionSettings = $instanceProfileOptionSetting,$instanceTypeOptionSetting,$serviceRoleOptionSetting,$environmentTypeOptionSetting,$enhancedHealthReportingOptionSetting
+    $optionSettings = $instanceProfileOptionSetting,$instanceTypeOptionSetting,$serviceRoleOptionSetting,$environmentTypeOptionSetting,$enhancedHealthReportingOptionSetting,$disableIMDSv1
 
     New-EBEnvironment -ApplicationName $glb_ebAppName -EnvironmentName $environmentName -PlatformArn $platformArn -OptionSetting $optionSettings -Tag $EBTag
 }
